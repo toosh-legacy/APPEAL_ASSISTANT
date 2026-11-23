@@ -56,18 +56,26 @@ def suite_extraction(runs: list[dict]) -> Suite:
     s = Suite("extraction", "every field exact match >= 0.90")
     per = {}
     for f in FIELDS:
-        ok = 0
-        for r in runs:
-            exp = r["g"]["label"]["reason_text"] if f == "denial_reason" else r["g"]["label"]["fields"][f]
-            got = r["vals"].get(f)
-            if f == "denial_codes":
-                ok += sorted(got or []) == sorted(exp)
-            else:
-                ok += (got or "").strip().lower() == (exp or "").strip().lower()
-        per[f] = round(ok / len(runs), 4)
-    s.metrics = {"per_field": per, "mean": round(statistics.mean(per.values()), 4), "n": len(runs)}
+        per[f] = round(sum(_field_ok(r, f) for r in runs) / len(runs), 4)
+    s.metrics = {"per_field": per, "mean": round(statistics.mean(per.values()), 4), "n": len(runs), "by_family": _family_means(runs)}
     s.passed = all(v >= 0.90 for v in per.values())
     return s
+
+
+def _field_ok(r: dict, f: str) -> bool:
+    exp = r["g"]["label"]["reason_text"] if f == "denial_reason" else r["g"]["label"]["fields"][f]
+    got = r["vals"].get(f)
+    if f == "denial_codes":
+        return sorted(got or []) == sorted(exp)
+    return (got or "").strip().lower() == (exp or "").strip().lower()
+
+
+def _family_means(runs: list[dict]) -> dict[str, float]:
+    """Mean field accuracy per gold template family (gold = notice layout, eob = EOB statement layout)."""
+    fams: dict[str, list[float]] = {}
+    for r in runs:
+        fams.setdefault(r["g"].get("family", "gold"), []).append(sum(_field_ok(r, f) for f in FIELDS) / len(FIELDS))
+    return {k: round(statistics.mean(v), 4) for k, v in fams.items()}
 
 
 def suite_classification(runs: list[dict]) -> Suite:

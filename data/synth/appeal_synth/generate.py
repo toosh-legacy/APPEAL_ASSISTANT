@@ -3,6 +3,11 @@
 Every identifier is unmistakably fake (hard rule 8): Testperson names, ZZTEST member IDs, 555-01xx
 phones, "123 Example St" addresses, fictional insurers. Gold letters use a *different* template family
 and phrasing bank than train/validation letters, to measure generalization rather than memorization.
+
+Gold has two families: 120 "gold" letters (notice layout) and, since Phase B, 80 "eob" letters: an
+Explanation-of-Benefits layout with a claim table, different field labels, spelled-out dates and its own
+plan/reason phrasings. The eob family was written without looking at the extraction rules, so it tests
+whether extraction generalizes to a layout its author did not design it for.
 """
 
 from __future__ import annotations
@@ -80,6 +85,13 @@ PLAN_PHRASES = {
         "individual_marketplace": "Plan type: Individual / Marketplace (ACA) coverage",
         "medicare_advantage": "Plan type: Medicare Advantage (Part C)",
         "medicaid_managed_care": "Plan type: Medicaid managed care (state program)",
+    },
+    "eob": {
+        "employer_self_funded": "Coverage: group health benefits through your employer (self-insured, ERISA plan)",
+        "employer_fully_insured": "Coverage: employer group insurance policy",
+        "individual_marketplace": "Coverage: individual policy bought on the ACA marketplace",
+        "medicare_advantage": "Coverage: Medicare Advantage HMO",
+        "medicaid_managed_care": "Coverage: state Medicaid program, managed care plan",
     },
 }
 
@@ -161,6 +173,40 @@ REASONS = {
             "We have made an adverse determination regarding {service}.",
         ],
     },
+    "eob": {
+        "medical_necessity": [
+            "The plan's physician reviewer decided {service} was not needed for your condition at this time.",
+            "{service} does not meet the plan's guidelines for medical need based on the records we received.",
+        ],
+        "prior_authorization": [
+            "{service} must be approved by the plan before you receive it. We have no record of an approval.",
+            "The provider did not get the plan's OK in advance for {service}.",
+        ],
+        "out_of_network": [
+            "The provider who performed {service} does not have a contract with the plan.",
+            "{service} was performed by a provider outside your plan's network; your plan has no out-of-network benefits.",
+        ],
+        "coding_billing_error": [
+            "The provider billed {service} with a code that does not match the diagnosis. Ask the provider to send a corrected claim.",
+            "Information needed to process {service} was missing from the claim the provider sent.",
+        ],
+        "experimental_investigational": [
+            "The plan does not pay for {service} for this condition because it is still considered experimental.",
+            "{service} has not been shown to work for this diagnosis and is treated as investigational.",
+        ],
+        "not_covered_benefit": [
+            "Your plan does not include {service} as a benefit.",
+            "{service} is excluded from coverage under your plan documents.",
+        ],
+        "timely_filing": [
+            "The provider sent the claim for {service} after the deadline for submitting claims.",
+            "The claim for {service} was filed late.",
+        ],
+        "other_unclear": [
+            "This claim for {service} was not paid. Call us if you have questions.",
+            "We are not able to pay for {service}.",
+        ],
+    },
 }
 
 CODE_FOR = {
@@ -177,6 +223,7 @@ CODE_FOR = {
 APPEAL_PARAGRAPH = {
     "train": "You have the right to appeal this decision. To appeal, send a written request to the address below. See the enclosed notice of your appeal rights for deadlines and how to request an external review.",
     "gold": "APPEAL RIGHTS: If you disagree with this decision you may ask us to look at it again. Instructions and time limits are on the attached page.",
+    "eob": "Your right to appeal: you or someone you choose can ask the plan to review this decision. Send your request in writing to the plan address on this statement. Keep a copy for your records.",
 }
 
 
@@ -188,8 +235,8 @@ def _fmt_date(d: date, style: int) -> str:
     return d.strftime("%Y-%m-%d")
 
 
-def make_letter(rng: random.Random, split: str, idx: int, category: str | None = None) -> dict:
-    family = "gold" if split == "gold" else "train"
+def make_letter(rng: random.Random, split: str, idx: int, category: str | None = None, family: str | None = None) -> dict:
+    family = family or ("gold" if split == "gold" else "train")
     category = category or rng.choice(list(REASONS["train"]))
     plan_type = rng.choice(list(PLAN_PHRASES["train"]))
     state = rng.choice(STATES)
@@ -210,7 +257,31 @@ def make_letter(rng: random.Random, split: str, idx: int, category: str | None =
     ds = rng.randint(0, 2)
     plan_sentence = PLAN_PHRASES[family][plan_type]
 
-    if family == "train":
+    if family == "eob":
+        billed = rng.randint(80, 9000)
+        lines = [
+            "EXPLANATION OF BENEFITS - THIS IS NOT A BILL",
+            insurer,
+            f"Questions? Call {phone} (TTY 711), Monday to Friday",
+            "",
+            f"Statement date  {_fmt_date(notice, 0)}",
+            f"Patient  {name}",
+            f"Member number  {member_id}",
+            f"Claim ID  {claim}",
+            f"State of residence  {state}",
+            plan_sentence,
+            "",
+            "CLAIM DETAIL",
+            "Date of service | What you received | Billed | Plan paid | You may owe",
+            f"{_fmt_date(dos, 0)} | {service} | ${billed:,}.00 | $0.00 | ${billed:,}.00",
+            "",
+            "Why this claim was not paid",
+            reason,
+        ]
+        if codes:
+            lines.append(f"Remark code {codes[0]}")
+        lines += ["", APPEAL_PARAGRAPH["eob"], "", f"{insurer} Claims Review, 123 Example St, Testville, {state} 00000"]
+    elif family == "train":
         lines = [
             insurer.upper(),
             "Member Services: " + phone,
@@ -267,6 +338,7 @@ def make_letter(rng: random.Random, split: str, idx: int, category: str | None =
     return {
         "id": f"{split}-{idx:05d}",
         "split": split,
+        "family": family,
         "text": text,
         "label": {
             "category": category,
@@ -294,6 +366,9 @@ def make_letter(rng: random.Random, split: str, idx: int, category: str | None =
     }
 
 
+EOB_GOLD = 80
+
+
 def generate(seed: int = 20251123) -> dict[str, int]:
     sizes = {"train": 3000, "validation": 500, "gold": 120}
     out: dict[str, int] = {}
@@ -307,11 +382,17 @@ def generate(seed: int = 20251123) -> dict[str, int]:
             # gold: balanced categories (15 each)
             cat = cats[i % len(cats)] if split == "gold" else None
             letters.append(make_letter(rng, split, i, cat))
+        if split == "gold":
+            # second gold family (Phase B): own RNG stream so the first 120 letters stay identical
+            rng2 = random.Random(f"{seed}-gold-eob")
+            for j in range(EOB_GOLD):
+                letters.append(make_letter(rng2, split, n + j, cats[j % len(cats)], family="eob"))
+            out["gold_eob"] = EOB_GOLD
         path = (GOLD_DIR / "letters.jsonl") if split == "gold" else (OUT_DIR / f"{split}.jsonl")
         with path.open("w", encoding="utf-8", newline="\n") as f:
             for letter in letters:
                 f.write(json.dumps(letter, ensure_ascii=False) + "\n")
-        out[split] = n
+        out[split] = len(letters)
     return out
 
 

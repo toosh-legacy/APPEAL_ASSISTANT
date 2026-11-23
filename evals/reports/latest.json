@@ -16,14 +16,18 @@
     "denial_codes": 1.0
    },
    "mean": 1.0,
-   "n": 120
+   "n": 200,
+   "by_family": {
+    "gold": 1.0,
+    "eob": 1.0
+   }
   }
  },
  "classification": {
   "passed": true,
   "gate": "macro-F1 >= 0.80",
   "metrics": {
-   "macro_f1": 0.838,
+   "macro_f1": 0.8454,
    "per_class_recall": {
     "medical_necessity": 1.0,
     "prior_authorization": 0.6,
@@ -31,13 +35,13 @@
     "coding_billing_error": 0.8,
     "experimental_investigational": 1.0,
     "not_covered_benefit": 1.0,
-    "timely_filing": 0.733,
-    "other_unclear": 0.533
+    "timely_filing": 0.6,
+    "other_unclear": 0.72
    },
-   "ask_user_rate": 0.175,
+   "ask_user_rate": 0.165,
    "sources": {
-    "model": 55,
-    "denial_code": 65
+    "model": 99,
+    "denial_code": 101
    }
   }
  },
@@ -99,7 +103,7 @@
   "passed": true,
   "gate": "100% of cited IDs exist in the case's retrieval set",
   "metrics": {
-   "citations": 476,
+   "citations": 794,
    "invalid": 0,
    "validity": 1.0
   }
@@ -108,8 +112,8 @@
   "passed": true,
   "gate": "deterministic checker marks >= 95% of cited sentences supported",
   "metrics": {
-   "cited_sentences": 476,
-   "supported": 476,
+   "cited_sentences": 794,
+   "supported": 794,
    "rate": 1.0
   }
  },
@@ -117,9 +121,9 @@
   "passed": true,
   "gate": "100% of P-citing sentences use non-binding wording",
   "metrics": {
-   "precedent_sentences": 139,
-   "non_binding": 139,
-   "letters_citing_precedents": 96
+   "precedent_sentences": 236,
+   "non_binding": 236,
+   "letters_citing_precedents": 162
   }
  },
  "red_team": {
@@ -137,21 +141,21 @@
   "passed": true,
   "gate": "0 raw identifiers in captured provider inputs",
   "metrics": {
-   "payloads_checked": 575,
+   "payloads_checked": 815,
    "raw_identifier_hits": 0,
    "leak_gate_blocks": 0,
-   "cases": 190
+   "cases": 270
   }
  },
  "budget": {
   "passed": true,
   "gate": "p50 seconds per case <= 10 (offline providers)",
   "metrics": {
-   "p50_s": 5.303,
-   "p95_s": 6.32,
-   "n": 120,
+   "p50_s": 5.872,
+   "p95_s": 6.836,
+   "n": 200,
    "statuses": {
-    "READY": 120
+    "READY": 200
    }
   }
  }

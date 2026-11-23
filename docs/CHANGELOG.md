@@ -66,3 +66,9 @@
 - Optional local cross-encoder reranker (`RERANKER=crossencoder`, default; CI uses `none`).
 - Retrieval gate passes on dev (0.855); held-out 0.707, sealed 0.755. Budget p50 5.3 s (was 0.65 s).
 
+## Phase B · Gold set, copy, code health
+- Gold letters 120 → 200: 80 EOB-layout letters (unseen template). Extraction on them was 0.60 before the layout-general fixes; now 1.0 (optimistic, see DECISIONS). All eval gates pass on 200 letters.
+- Readability checker and plain-language pass on web copy and playbook explanations.
+- mypy: 85 findings fixed, type check blocking in CI.
+- Web: ESLint, Prettier, Vitest (API client tests) in CI; lockfile regenerated for Linux.
+

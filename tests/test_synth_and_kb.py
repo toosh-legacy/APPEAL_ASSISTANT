@@ -17,9 +17,11 @@ def _letters(path: Path):
 
 def test_gold_letters_committed_and_balanced():
     gold = _letters(ROOT / "evals" / "gold" / "letters.jsonl")
-    assert len(gold) == 120
+    assert len(gold) == 200  # SPEC 21.3: 120 notice-layout + 80 EOB-layout letters
     cats = [g["label"]["category"] for g in gold]
-    assert {c: cats.count(c) for c in set(cats)} == {c: 15 for c in CATEGORIES}
+    assert {c: cats.count(c) for c in set(cats)} == {c: 25 for c in CATEGORIES}
+    fams = [g["family"] for g in gold]
+    assert fams.count("gold") == 120 and fams.count("eob") == 80
 
 
 def test_synthetic_identifiers_are_obviously_fake():

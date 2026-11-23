@@ -1,6 +1,6 @@
 {
   "ablation_no_codes": {
-    "gold_macro_f1": 0.6468058968058968,
+    "gold_macro_f1": 0.7329936076754048,
     "validation_macro_f1": 1.0
   },
   "ask_user_threshold": 0.7,
@@ -76,7 +76,7 @@
       "threshold": 0.95
     }
   ],
-  "gold_accuracy_when_answered": 0.8888888888888888,
+  "gold_accuracy_when_answered": 0.8909090909090909,
   "gold_confusion_matrix": {
     "labels": [
       "medical_necessity",
@@ -90,7 +90,7 @@
     ],
     "matrix": [
       [
-        15,
+        25,
         0,
         0,
         0,
@@ -101,18 +101,18 @@
       ],
       [
         0,
-        9,
+        14,
+        2,
         0,
         0,
         0,
         0,
-        0,
-        6
+        9
       ],
       [
         0,
         0,
-        15,
+        25,
         0,
         0,
         0,
@@ -123,18 +123,18 @@
         0,
         0,
         0,
-        12,
+        20,
         0,
         0,
         0,
-        3
+        5
       ],
       [
         0,
         0,
         0,
         0,
-        15,
+        25,
         0,
         0,
         0
@@ -145,7 +145,7 @@
         0,
         0,
         0,
-        15,
+        25,
         0,
         0
       ],
@@ -156,8 +156,8 @@
         0,
         0,
         0,
-        11,
-        2
+        15,
+        8
       ],
       [
         0,
@@ -167,22 +167,22 @@
         0,
         7,
         0,
-        8
+        18
       ]
     ]
   },
   "gold_coverage_at_threshold": 0.825,
-  "gold_ece": 0.10662661678193935,
-  "gold_macro_f1": 0.837992722643458,
+  "gold_ece": 0.08473226513340164,
+  "gold_macro_f1": 0.8392253336332284,
   "gold_per_class_recall": {
     "coding_billing_error": 0.8,
     "experimental_investigational": 1.0,
     "medical_necessity": 1.0,
     "not_covered_benefit": 1.0,
-    "other_unclear": 0.5333333333333333,
+    "other_unclear": 0.72,
     "out_of_network": 1.0,
-    "prior_authorization": 0.6,
-    "timely_filing": 0.7333333333333333
+    "prior_authorization": 0.56,
+    "timely_filing": 0.6
   },
   "oof_coverage_at_threshold": 0.7351428571428571,
   "oof_ece_calibrated": 0.0338549083678631,

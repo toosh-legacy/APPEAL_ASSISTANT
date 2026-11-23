@@ -49,10 +49,19 @@ def _fv(value, conf):
     return {"value": value, "confidence": conf}
 
 
+# Document titles that contain insurer-like words ("benefits", "health") but are not the insurer's name.
+_DOC_TITLE = re.compile(
+    r"(?i)explanation of (benefits|coverage)|not a bill|notice of|adverse (benefit )?determination|"
+    r"appeal rights|summary of|claim (detail|statement)|important (information|notice)"
+)
+
+
 def _insurer(lines: list[str], text: str) -> tuple[str | None, float]:
     kw = re.compile(r"\b(health|insurance|plan|care|benefits?|partners|mutual|network|trust|assurance|blue|medical)\b", re.I)
     for ln in lines[:4]:
         cand = ln.split("|")[0].strip()
+        if _DOC_TITLE.search(cand):
+            continue
         if cand and kw.search(cand) and not re.search(r"\[|\d{3}", cand) and len(cand) < 60:
             if cand.isupper():
                 # prefer a mixed-case occurrence elsewhere in the letter
@@ -95,6 +104,42 @@ def _labelled(text: str, labels: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+# Column headers of claim tables (EOB-style statements), mapped to fields.
+_TABLE_COLUMNS = {
+    "date_of_service": re.compile(r"(?i)^(dates? of service|service dates?|dos|date\(s\) of service)$"),
+    "service": re.compile(r"(?i)^(what you received|service( description)?|description( of service)?|procedure|item/service|treatment)$"),
+}
+
+
+def _table_fields(lines: list[str]) -> dict[str, str]:
+    """Reads the first data row under a header row of a '|' or tab separated table."""
+    out: dict[str, str] = {}
+    for i, ln in enumerate(lines[:-1]):
+        sep = "|" if ln.count("|") >= 2 else ("\t" if ln.count("\t") >= 2 else None)
+        if not sep:
+            continue
+        header = [c.strip() for c in ln.split(sep)]
+        cols = {f: j for f, pat in _TABLE_COLUMNS.items() for j, h in enumerate(header) if pat.match(h)}
+        if not cols:
+            continue
+        row = [c.strip() for c in lines[i + 1].split(sep)]
+        if len(row) != len(header):
+            continue
+        for f, j in cols.items():
+            if row[j]:
+                out.setdefault(f, row[j])
+        if out:
+            return out
+    return out
+
+
+# A short heading line (no final period) that introduces the reason paragraph on the next line.
+_REASON_HEADING = re.compile(
+    r"(?i)^(summary of (?:our|the) decision|why (?:this|your|the) (?:claim|request|service)[\w ]* (?:not paid|denied|not approved)|"
+    r"reasons? for (?:this|our|the) decision|why we (?:denied|did not pay)[\w ]*|our decision|explanation of (?:the )?denial)\s*:?$"
+)
+
+
 def offline_extract(text: str) -> dict[str, Any]:
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     f: dict[str, dict] = {}
@@ -110,10 +155,13 @@ def offline_extract(text: str) -> dict[str, Any]:
     m = re.search(r"\[MEMBER_ID_\d+\]", text)
     f["member_id"] = _fv(m.group(0) if m else None, 0.95 if m else 0.0)
 
+    table = _table_fields(lines)
     svc = _labelled(text, r"item/service|service(?! date)(?! dates)|services? (?:requested|denied)|treatment")
     conf = 0.9 if svc else 0.0
-    if svc and re.match(r"(?i)date", svc):
+    if svc and (re.match(r"(?i)date", svc) or svc.startswith(("|", "\t"))):  # a table header row, not a value
         svc = None
+    if not svc and table.get("service"):
+        svc, conf = table["service"], 0.85
     if not svc:
         m = re.search(r"(?i)(?:for|of) ((?:[a-z][\w\-()]*\s){0,5}[a-z][\w\-()]*) (?:was|is|requires|does)", text)
         svc, conf = (m.group(1), 0.5) if m else (None, 0.0)
@@ -121,7 +169,11 @@ def offline_extract(text: str) -> dict[str, Any]:
 
     dos_line = _labelled(text, r"date of service|service date")
     dos = parse_date(dos_line or "")
-    f["date_of_service"] = _fv(dos, 0.9 if dos else 0.0)
+    conf = 0.9 if dos else 0.0
+    if not dos and table.get("date_of_service"):
+        dos = parse_date(table["date_of_service"])
+        conf = 0.85 if dos else 0.0
+    f["date_of_service"] = _fv(dos, conf)
 
     nd_line = _labelled(text, r"notice date|date of notice|letter date|date")
     nd = parse_date(nd_line or "") if nd_line else None
@@ -138,9 +190,10 @@ def offline_extract(text: str) -> dict[str, Any]:
     reason = m.group(1).strip() if m else None
     conf = 0.9 if reason else 0.0
     if not reason:
-        m = re.search(r"(?im)^summary of (?:our|the) decision\s*\n(.+)$", text)
-        if m:
-            reason, conf = m.group(1).strip(), 0.85
+        for i, ln in enumerate(lines[:-1]):
+            if _REASON_HEADING.match(ln):
+                reason, conf = lines[i + 1], 0.85
+                break
     if not reason:
         m = re.search(r"(?i)([^.\n]*\b(denied|not covered|not medically necessary|not approved)\b[^.\n]*\.)", text)
         reason, conf = (m.group(1).strip(), 0.5) if m else (None, 0.0)

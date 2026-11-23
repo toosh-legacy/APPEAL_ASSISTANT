@@ -22,36 +22,36 @@ Validation letters come from the same template family as training letters, so va
 ## Calibration
 Temperature scaling (T = 0.45) fitted on the grouped out-of-fold predictions.
 - OOF ECE before: 0.2077; after: 0.0339
-- Gold ECE (calibrated): 0.1066
+- Gold ECE (calibrated): 0.0847
 - Reliability diagrams: `reliability_validation.png` (OOF), `reliability_gold.png`
 
 ## Ask-the-user threshold
-Chosen from the OOF coverage-vs-accuracy curve as the lowest threshold where answered cases reach ≥ 95% accuracy: **0.70** (OOF coverage 73.5%). On gold: coverage 82.5%, accuracy when answered 0.8888888888888888.
+Chosen from the OOF coverage-vs-accuracy curve as the lowest threshold where answered cases reach ≥ 95% accuracy: **0.70** (OOF coverage 73.5%). On gold: coverage 82.5%, accuracy when answered 0.8909090909090909.
 
 ## Gold results
-- Macro-F1: **0.838**
-- Per-class recall: {"medical_necessity": 1.0, "prior_authorization": 0.6, "out_of_network": 1.0, "coding_billing_error": 0.8, "experimental_investigational": 1.0, "not_covered_benefit": 1.0, "timely_filing": 0.733, "other_unclear": 0.533}
+- Macro-F1: **0.839**
+- Per-class recall: {"medical_necessity": 1.0, "prior_authorization": 0.56, "out_of_network": 1.0, "coding_billing_error": 0.8, "experimental_investigational": 1.0, "not_covered_benefit": 1.0, "timely_filing": 0.6, "other_unclear": 0.72}
 
 ```
                               precision    recall  f1-score   support
 
-        coding_billing_error       1.00      0.80      0.89        15
-experimental_investigational       1.00      1.00      1.00        15
-           medical_necessity       1.00      1.00      1.00        15
-         not_covered_benefit       0.68      1.00      0.81        15
-               other_unclear       0.42      0.53      0.47        15
-              out_of_network       0.88      1.00      0.94        15
-         prior_authorization       1.00      0.60      0.75        15
-               timely_filing       1.00      0.73      0.85        15
+        coding_billing_error       1.00      0.80      0.89        25
+experimental_investigational       1.00      1.00      1.00        25
+           medical_necessity       1.00      1.00      1.00        25
+         not_covered_benefit       0.78      1.00      0.88        25
+               other_unclear       0.45      0.72      0.55        25
+              out_of_network       0.86      1.00      0.93        25
+         prior_authorization       1.00      0.56      0.72        25
+               timely_filing       1.00      0.60      0.75        25
 
-                    accuracy                           0.83       120
-                   macro avg       0.87      0.83      0.84       120
-                weighted avg       0.87      0.83      0.84       120
+                    accuracy                           0.83       200
+                   macro avg       0.89      0.83      0.84       200
+                weighted avg       0.89      0.83      0.84       200
 
 ```
 
 ## Ablation: denial codes (leakage discussion)
-Without the code features: validation macro-F1 1.000, gold macro-F1 0.647. In the synthetic generator a code is present in ~60% of letters and always matches the category, so codes are close to a label leak; real letters often carry generic or wrong codes. The Classifier agent therefore uses the code map only as a high-precision override, and flags cases where the model disagrees with probability > 0.9.
+Without the code features: validation macro-F1 1.000, gold macro-F1 0.733. In the synthetic generator a code is present in ~60% of letters and always matches the category, so codes are close to a label leak; real letters often carry generic or wrong codes. The Classifier agent therefore uses the code map only as a high-precision override, and flags cases where the model disagrees with probability > 0.9.
 
 ## Limitations
 - Synthetic-only training data (see above); English only; one reason per letter.

@@ -46,16 +46,16 @@ Retention purge (`make retention`), one trace per case (API → job → agents),
 ### Evaluation (`evals/reports/latest.md`, offline provider)
 | Suite | Gate | Result | Key numbers |
 |---|---|---|---|
-| extraction | every field exact match ≥ 0.90 | PASS | all 10 fields (incl. denial reason) 1.000 on 120 gold letters |
-| classification | macro-F1 ≥ 0.80 | PASS | macro-F1 0.838; ask-user rate 17.5% |
+| extraction | every field exact match ≥ 0.90 | PASS | all 10 fields 1.000 on 200 gold letters (Phase B: +80 EOB-layout letters scored 0.60 before layout-general fixes) |
+| classification | macro-F1 ≥ 0.80 | PASS | macro-F1 0.845 on 200 letters; ask-user rate 16.5% |
 | deadlines | exact due date 100% | PASS | 100% |
 | retrieval | recall@5 ≥ 0.85 (production path) | PASS (dev) | dev 0.855, MRR 0.901, nDCG@10 0.863 — **held-out 0.707, sealed 0.755** (Phase B update) |
 | citation_validity | 100% | PASS | 462 citations, 0 invalid |
 | support | ≥ 95% | PASS | 462/462 (100%) |
 | precedent_wording | 100% | PASS | 147/147 non-binding; 100/120 letters cite precedents |
 | red_team | 0 failures | PASS | 0/40 failures; 36/40 also flagged by the detector |
-| privacy | 0 raw identifiers | PASS | 0 in 608 captured provider inputs (190 cases incl. 30 probes) |
-| budget | p50 ≤ 10 s | PASS | p50 5.3 s, p95 6.3 s (cross-encoder reranker on CPU; was 0.73 s) |
+| privacy | 0 raw identifiers | PASS | 0 in 815 captured provider inputs (270 cases incl. 30 probes) |
+| budget | p50 ≤ 10 s | PASS | p50 5.9 s, p95 6.8 s on 200 letters (cross-encoder reranker on CPU; was 0.73 s) |
 
 **Read these honestly:** extraction (100%) is optimistic — the offline extraction rules and both synthetic template families were written by the same author overnight. Support (100%) uses the deterministic checker, and the Writer already drops sentences it cannot support; a calibrated LLM judge (Phase C) will be stricter.
 

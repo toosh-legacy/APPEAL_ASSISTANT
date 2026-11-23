@@ -2,16 +2,16 @@
 
 | Model | Version | Primary metric | Value | Previous (baseline) |
 |---|---|---|---:|---:|
-| m1 | v1 | gold macro-F1 | 0.8380 | 0.8435 |
+| m1 | v1 | gold macro-F1 | 0.8392 | 0.8435 |
 | m2 | v1 | test macro-F1 (shortcuts removed) | 0.9772 | 0.9772 |
 | m3 | v1 | test Brier (selected model) | 0.1882 | 0.1882 |
 
 ## m1
 
 - Selected: logreg; validation macro-F1 {'linear_svm_calibrated': 1.0, 'logreg': 1.0}
-- Gold macro-F1 0.838; ECE OOF 0.0339, gold 0.1066
-- Ask-user threshold 0.70; gold coverage 82.5%, accuracy when answered 0.8888888888888888
-- Ablation without codes: gold macro-F1 0.647
+- Gold macro-F1 0.839; ECE OOF 0.0339, gold 0.0847
+- Ask-user threshold 0.70; gold coverage 82.5%, accuracy when answered 0.8909090909090909
+- Ablation without codes: gold macro-F1 0.733
 
 ## m2
 
