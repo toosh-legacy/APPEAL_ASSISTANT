@@ -37,7 +37,7 @@ jobs:
         run: uv run mypy packages/core services || true
       - name: Migrate
         run: uv run python tasks.py migrate
-      - name: Data (CI mode: synthetic IMR sample, eCFR, LSA embeddings)
+      - name: "Data (CI mode: synthetic IMR sample, eCFR, LSA embeddings)"
         run: uv run python -m appeal_data.cli all --ci
       - name: Train models
         run: uv run python -m appeal_ml.train all
