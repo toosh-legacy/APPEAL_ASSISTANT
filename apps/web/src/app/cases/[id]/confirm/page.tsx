@@ -99,7 +99,7 @@ export default function Confirm({ params }: { params: Promise<{ id: string }> })
           const f = fields[key] ?? {};
           const low = (f.confidence ?? 0) < 0.7;
           return (
-            <div key={key} className={low ? "rounded-lg border-l-4 border-amber-500 bg-amber-50 p-3" : ""}>
+            <div key={key} className={low ? "rounded-lg border border-amber-400 bg-amber-50 p-3" : ""}>
               <label htmlFor={key} className="label">
                 {label}{" "}
                 <span className={`badge ${low ? "bg-amber-200 text-amber-900" : "bg-green-100 text-green-900"}`}>
