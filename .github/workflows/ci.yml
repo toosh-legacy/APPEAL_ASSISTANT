@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: appeal
+          POSTGRES_PASSWORD: appeal_local_only
+          POSTGRES_DB: appeal
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U appeal" --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["56379:6379"]
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports: ["10000:10000"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.12
+      - run: uv sync
+      - run: uv run python tasks.py setup
+      - name: Lint
+        run: uv run ruff check .
+      - name: Type check (core + services)
+        run: uv run mypy packages/core services || true
+      - name: Migrate
+        run: uv run python tasks.py migrate
+      - name: Tests
+        run: uv run pytest -m "not slow and not azure"
+      - name: Fast evals (blocking gates)
+        run: uv run python -m appeal_evals.run --fast
+      - name: Model promotion check
+        run: uv run python -m appeal_ml.promotion_check
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
