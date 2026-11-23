@@ -233,7 +233,7 @@ def get_case(response: Response, case_id: str = Depends(require_case_access), db
             out["insurer_reported"] = {
                 "issuer": ins.issuer,
                 "plan_year": ins.plan_year,
-                "denial_rate": ins.claims_denied / ins.claims_received,
+                "denial_rate": (ins.claims_denied or 0) / ins.claims_received,
                 "disclaimer": "Claims denials are not necessarily indicative of issuer strength or plan quality.",
             }
     letter = _letter(db, case_id)
@@ -552,7 +552,7 @@ def insurers(db: Session = Depends(get_db)) -> dict:
                 "issuer": r.issuer,
                 "claims_received": r.claims_received,
                 "claims_denied": r.claims_denied,
-                "denial_rate": (r.claims_denied / r.claims_received) if r.claims_received else None,
+                "denial_rate": ((r.claims_denied or 0) / r.claims_received) if r.claims_received else None,
                 "appeals_filed": r.appeals_filed,
                 "appeals_overturned": r.appeals_overturned,
             }
