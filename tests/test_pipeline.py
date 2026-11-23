@@ -18,6 +18,24 @@ def _gold(i=0):
     return json.loads((ROOT / "evals" / "gold" / "letters.jsonl").read_text(encoding="utf-8").splitlines()[i])
 
 
+def _gold_coded(i=0):
+    """i-th gold letter that carries a denial code (the code map makes classification confident)."""
+    rows = [json.loads(x) for x in (ROOT / "evals" / "gold" / "letters.jsonl").read_text(encoding="utf-8").splitlines()]
+    return [g for g in rows if g["label"]["fields"]["denial_codes"]][i]
+
+
+def finish(client, cid, H):
+    """Drain the queue; if the classifier asks, answer like a user would (pick the suggestion)."""
+    drain()
+    d = client.get(f"/v1/cases/{cid}", headers=H).json()
+    if d["status"] == "NEEDS_CATEGORY":
+        r = client.post(f"/v1/cases/{cid}/category", json={"category": d["classification"]["category"]}, headers=H)
+        assert r.status_code == 200, r.text
+        drain()
+        d = client.get(f"/v1/cases/{cid}", headers=H).json()
+    return d
+
+
 @pytest.fixture(scope="module")
 def client():
     from appeal_core.db import get_engine
@@ -72,8 +90,7 @@ def test_gold_letter_flows_to_ready_with_cited_letter(client):
     cid, H = create(client, g["text"])
     drain()
     confirm(client, cid, H)
-    drain()
-    d = client.get(f"/v1/cases/{cid}", headers=H).json()
+    d = finish(client, cid, H)
     assert d["status"] == "READY", d
     L = client.get(f"/v1/cases/{cid}/letter", headers=H).json()
     cited = [c for s in L["sections"] for x in s["sentences"] for c in x["citations"]]
@@ -117,7 +134,7 @@ def test_worker_crash_resumes_without_rerunning_completed_steps(client, monkeypa
     from appeal_worker import agents
     from appeal_worker.orchestrator import Orchestrator
 
-    cid, H = create(client, _gold(4)["text"])
+    cid, H = create(client, _gold_coded(0)["text"])
     drain()
     confirm(client, cid, H)
     real_write = agents.write
@@ -153,14 +170,23 @@ def test_replay_of_finished_case_makes_no_provider_calls(client):
     cid, H = create(client, _gold(5)["text"])
     drain()
     confirm(client, cid, H)
-    drain()
+    finish(client, cid, H)
     o = Orchestrator()
     o.handle("case.ingest", cid)
     o.handle("case.draft", cid)
     assert o.provider_calls == 0
 
 
-def test_low_confidence_goes_to_needs_category(client):
+def test_low_confidence_goes_to_needs_category(client, monkeypatch):
+    from appeal_worker import agents
+
+    real = agents.classify
+
+    def unsure(*a, **k):
+        c = real(*a, **k)
+        return c.model_copy(update={"needs_user": True, "probability": 0.41})
+
+    monkeypatch.setattr(agents, "classify", unsure)
     text = (
         "Example Health Plan\nMember ID: ZZTEST555123\nDear Jordan Testperson,\n"
         "We have reviewed your request for physical therapy. Plan type: Medicare Advantage.\n"
@@ -181,7 +207,7 @@ def test_exports_blocked_until_placeholders_filled(client):
     cid, H = create(client, _gold(6)["text"])
     drain()
     confirm(client, cid, H)
-    drain()
+    finish(client, cid, H)
     assert client.get(f"/v1/cases/{cid}/exports/pdf", headers=H).status_code == 409
     L = client.get(f"/v1/cases/{cid}/letter", headers=H).json()
     for s in L["sections"]:
@@ -201,7 +227,7 @@ def test_regenerate_section(client):
     cid, H = create(client, _gold(10)["text"])
     drain()
     confirm(client, cid, H)
-    drain()
+    finish(client, cid, H)
     before = client.get(f"/v1/cases/{cid}/letter", headers=H)
     assert before.status_code == 200, before.text
     before = before.json()

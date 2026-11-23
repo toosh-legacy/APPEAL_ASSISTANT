@@ -101,6 +101,13 @@ def tokenize(text: str, spans: list[PIISpan], tmap: TokenMap | None = None) -> t
     for tok, raw in sorted(tmap.tokens.items(), key=lambda kv: -len(kv[1])):
         if len(raw) >= 4:
             out = re.sub(re.escape(raw), tok, out)
+        # Name variants of a known person: "J. Last", "Jordan Q. Last", "Last, Jordan"
+        if tok.startswith("[PERSON_"):
+            parts = raw.split()
+            if len(parts) >= 2 and len(parts[0]) > 1:
+                first, last = re.escape(parts[0]), re.escape(parts[-1])
+                pat = rf"\b(?:{first}|{first[0]}\.)\s+(?:[A-Z]\.\s+)?{last}\b|\b{last},\s+{first}\b"
+                out = re.sub(pat, tok, out)
     return out, tmap
 
 

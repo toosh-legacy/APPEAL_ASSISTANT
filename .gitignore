@@ -17,3 +17,4 @@ apps/web/playwright-report/
 .coverage
 ml/artifacts/**/*.joblib
 ml/artifacts/**/*.npy
+*.tsbuildinfo

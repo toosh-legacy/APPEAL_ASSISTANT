@@ -35,3 +35,16 @@ One line each: **decision** — reason — alternative considered.
 - **Integration tests use the dev database (data already loaded); queue/state tests use `appeal_test`** — loading 42k IMR rows per test session is slow — a fully separate seeded test DB (Phase B).
 - **OTel console exporter writes to `var/logs/traces.jsonl`** — keeps the console readable — stdout.
 - **Ruff ignores B023/B904/B905/B017** — lambdas are executed synchronously inside the loop; others are stylistic — rewrite.
+- **Retrieval gold relevance is defined by text/metadata filters, never by the retriever** — avoids circular labels; questions whose phrases do not resolve are dropped — hand-picked chunk IDs.
+- **recall@5 normalized by min(|relevant|, 5)** — precedent questions have hundreds of relevant cases; plain recall@5 would be meaningless — hit@5.
+- **Keyword search uses OR between terms (`websearch_to_tsquery` with "or")** — AND semantics returns nothing for natural-language questions — plainto_tsquery (AND).
+- **Precedent embedding text = treatment category + subcategory + chunk text** — gives the vector side the same metadata signal the keyword side has — text only.
+- **M1 calibration and ask-user threshold come from grouped (by reason template) stratified out-of-fold predictions, with temperature scaling** — validation letters share templates with training letters (validation macro-F1 ≈ 1.0, useless for calibration); grouped OOF predicts unseen phrasing (OOF F1 0.84 ≈ gold 0.84) — isotonic on validation (tried first: gold ECE 0.13, threshold meaningless).
+- **M1 serving threshold overrides CLASSIFIER_THRESHOLD when the model is loaded** — SPEC 10 M1 threshold rule — single global threshold.
+- **M2 serving variant is the shortcut-removed TF-IDF model** — the user's text never contains reviewer boilerplate — serve the full model.
+- **M2/M3 time split: Y = most recent full year (2025); partial 2026 excluded** — SPEC 10 M2 split rule — include partial year.
+- **M3 HistGradientBoosting groups categories with < 10 rows (max 250 levels)** — native categorical support is capped at 255 levels — target encoding.
+- **Model binaries (`*.joblib`) are git-ignored; cards, metrics and configs are committed** — `make train` reproduces them in ~20 s — commit binaries.
+- **Next.js 15 + React 19 stable; ESLint/Prettier/Vitest not configured overnight** — time; `tsc --noEmit` + `next build` run in CI — full lint setup (Phase B).
+- **Playwright uses the locally installed Chrome (`channel: chrome`) and skips the browser download** — keeps network use to package registries — `npx playwright install`.
+- **Root package.json has no npm workspaces** — workspace hoisting fought with the React 19 peer ranges; scripts delegate with `npm --prefix apps/web` — workspaces.

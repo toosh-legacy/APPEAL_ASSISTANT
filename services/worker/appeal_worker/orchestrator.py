@@ -41,6 +41,10 @@ class StepFailed(Exception):
     pass
 
 
+class CaseBusy(Exception):
+    """Another worker holds this case's lock; the job is retried later (per-case ordering, like Service Bus sessions)."""
+
+
 class Orchestrator:
     def __init__(self, url: str | None = None, retriever=None, bus=None):
         self.url = url
@@ -127,13 +131,25 @@ class Orchestrator:
 
     # ------------------------------------------------------------------ job entry
     def handle(self, topic: str, case_id: str) -> None:
-        with span("job", topic=topic, case_id=case_id):
-            if topic == "case.ingest":
-                self.ingest(case_id)
-            elif topic == "case.draft":
-                self.draft(case_id)
-            else:
-                raise ValueError(f"unknown topic {topic}")
+        from sqlalchemy import text
+
+        from appeal_core.db import get_engine
+
+        key = int(hashlib.sha256(case_id.encode()).hexdigest()[:15], 16)
+        with get_engine(self.url).connect() as lock_conn:
+            if not lock_conn.execute(text("SELECT pg_try_advisory_lock(:k)"), {"k": key}).scalar():
+                raise CaseBusy(case_id)
+            try:
+                with span("job", topic=topic, case_id=case_id):
+                    if topic == "case.ingest":
+                        self.ingest(case_id)
+                    elif topic == "case.draft":
+                        self.draft(case_id)
+                    else:
+                        raise ValueError(f"unknown topic {topic}")
+            finally:
+                lock_conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": key})
+                lock_conn.commit()
 
     # ------------------------------------------------------------------ ingest
     def ingest(self, case_id: str) -> None:

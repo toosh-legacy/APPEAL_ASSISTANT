@@ -252,9 +252,9 @@ async def events(request: Request, case_id: str = Depends(require_case_access), 
                 yield ": heartbeat\n\n"
                 continue
             yield f"id: {ev['id']}\nevent: {ev.get('type', 'message')}\ndata: {json.dumps(ev, default=str)}\n\n"
-            if ev.get("type") == "status" and ev.get("status") in TERMINAL:
-                return
-            if ev.get("type") == "needs_category":
+            terminal = (ev.get("type") == "status" and ev.get("status") in TERMINAL) or ev.get("type") == "needs_category"
+            # during replay, a terminal event followed by later events is stale: keep streaming
+            if terminal and not bus.history(case_id, ev["id"]):
                 return
 
     return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

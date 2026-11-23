@@ -124,10 +124,13 @@ def demo() -> None:
             env={**os.environ, "WORKER_MODE": "inprocess"},
         )
     )
+    npm = "npm.cmd" if os.name == "nt" else "npm"
+    if not (web / "node_modules").exists():
+        subprocess.call([npm, "install", "--no-audit", "--no-fund"], cwd=web, env={**os.environ, "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"})
     if (web / "node_modules").exists():
-        npm = "npm.cmd" if os.name == "nt" else "npm"
-        procs.append(subprocess.Popen([npm, "run", "dev"], cwd=web))
-        print("Web app:    http://localhost:3100")
+        script = "start" if (web / ".next" / "BUILD_ID").exists() else "dev"
+        procs.append(subprocess.Popen([npm, "run", script], cwd=web))
+        print("Web app:    http://localhost:3100   <- open this")
     try:
         for p in procs:
             p.wait()
