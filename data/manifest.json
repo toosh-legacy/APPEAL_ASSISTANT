@@ -1,7 +1,7 @@
 {
   "datasets": {
     "ecfr": {
-      "downloaded_at": "2026-11-23T07:23:20+00:00",
+      "downloaded_at": "2026-11-23T20:26:53+00:00",
       "rows": 406,
       "schema_ok": true,
       "sha256": "cda0e002a5dbbf32693e18c79aa25b4a0e338b1264b2a76efbaaf1c9484d70da",
@@ -85,7 +85,7 @@
     "embeddings": {
       "dim": 384,
       "embedder": "minilm",
-      "rows": 53035,
+      "rows": 425,
       "source": "local"
     },
     "imr": {
@@ -112,7 +112,7 @@
     "insurers": {
       "data_plan_year": 2025,
       "disclaimer": "Claims denials are not necessarily indicative of issuer strength or plan quality.",
-      "downloaded_at": "2026-11-23T08:22:23+00:00",
+      "downloaded_at": "2026-11-23T20:26:56+00:00",
       "page": "https://www.cms.gov/marketplace/resources/data/public-use-files",
       "rows": 136,
       "schema_ok": true,
