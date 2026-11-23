@@ -6,8 +6,8 @@ export default function Home() {
       <section className="card">
         <h1 className="text-3xl font-bold">Got a health insurance denial?</h1>
         <p className="mt-3">
-          Paste your denial letter. We explain it in plain words, find your appeal deadline, and help you draft an appeal letter where
-          every legal statement is linked to its source.
+          Paste your denial letter. We explain it in plain words, find your appeal deadline, and help you draft an appeal letter where every legal statement is
+          linked to its source.
         </p>
         <Link href="/start" className="btn mt-5">
           Start my appeal
@@ -15,7 +15,9 @@ export default function Home() {
       </section>
 
       <section className="card" aria-labelledby="how">
-        <h2 id="how" className="text-xl font-bold">How it works</h2>
+        <h2 id="how" className="text-xl font-bold">
+          How it works
+        </h2>
         <ol className="mt-2 list-decimal space-y-1 pl-6">
           <li>Paste or upload your letter.</li>
           <li>Check the facts we found and fix anything wrong.</li>
@@ -25,7 +27,9 @@ export default function Home() {
       </section>
 
       <section className="card" aria-labelledby="privacy">
-        <h2 id="privacy" className="text-xl font-bold">Our privacy promise</h2>
+        <h2 id="privacy" className="text-xl font-bold">
+          Our privacy promise
+        </h2>
         <ul className="mt-2 list-disc space-y-1 pl-6">
           <li>Names, member IDs, phone numbers and other identifiers are replaced with tokens before any AI step sees your letter.</li>
           <li>A safety check blocks any step that would still see a raw identifier.</li>
@@ -34,12 +38,12 @@ export default function Home() {
       </section>
 
       <section className="card" aria-labelledby="sources">
-        <h2 id="sources" className="text-xl font-bold">Where the information comes from</h2>
+        <h2 id="sources" className="text-xl font-bold">
+          Where the information comes from
+        </h2>
         <ul className="mt-2 list-disc space-y-1 pl-6">
           <li>Federal rules from the official eCFR website (free to use).</li>
-          <li>
-            Real decisions from outside doctors who reviewed denials, from the California Department of Managed Health Care (CC BY).
-          </li>
+          <li>Real decisions from outside doctors who reviewed denials, from the California Department of Managed Health Care (CC BY).</li>
         </ul>
         <p className="mt-2">
           We publish our latest test results in the evaluation report. <Link href="/about/data">Learn more about the data</Link>.

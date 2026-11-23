@@ -40,7 +40,9 @@ export default function Admin() {
 
       {evals.data && (
         <section className="card" aria-labelledby="ev">
-          <h2 id="ev" className="text-lg font-bold">Evaluations (latest first)</h2>
+          <h2 id="ev" className="text-lg font-bold">
+            Evaluations (latest first)
+          </h2>
           <table className="mt-2 w-full text-sm">
             <caption className="sr-only">Eval runs</caption>
             <thead>
@@ -65,7 +67,9 @@ export default function Admin() {
 
       {datasets.data && (
         <section className="card" aria-labelledby="ds">
-          <h2 id="ds" className="text-lg font-bold">Data refresh status</h2>
+          <h2 id="ds" className="text-lg font-bold">
+            Data refresh status
+          </h2>
           <table className="mt-2 w-full text-sm">
             <caption className="sr-only">Datasets</caption>
             <thead>
@@ -96,7 +100,9 @@ export default function Admin() {
 
       {traces.data && (
         <section className="card space-y-3" aria-labelledby="tr">
-          <h2 id="tr" className="text-lg font-bold">Recent case traces (redacted)</h2>
+          <h2 id="tr" className="text-lg font-bold">
+            Recent case traces (redacted)
+          </h2>
           {traces.data.cases.map((c: any) => (
             <details key={c.case_id} className="rounded-lg border border-slate-200 p-2">
               <summary>

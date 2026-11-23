@@ -7,7 +7,11 @@ export type CaseCreated = paths["/v1/cases"]["post"]["responses"]["201"]["conten
 export type UploadResponse = paths["/v1/uploads"]["post"]["responses"]["200"]["content"]["application/json"];
 
 export class ApiError extends Error {
-  constructor(public status: number, public title: string, public detail: string) {
+  constructor(
+    public status: number,
+    public title: string,
+    public detail: string,
+  ) {
     super(`${title}${detail ? ": " + detail : ""}`);
   }
 }
@@ -30,7 +34,11 @@ export async function api<T = any>(path: string, init: RequestInit & { caseId?: 
   const res = await fetch(`${API}${path}`, { ...init, headers });
   if (!res.ok) {
     let body: any = {};
-    try { body = await res.json(); } catch { /* not json */ }
+    try {
+      body = await res.json();
+    } catch {
+      /* not json */
+    }
     throw new ApiError(res.status, body.title ?? res.statusText, body.detail ?? "");
   }
   const ct = res.headers.get("content-type") ?? "";
@@ -43,7 +51,11 @@ export async function download(path: string, caseId: string, filename: string) {
   const res = await fetch(`${API}${path}`, { headers: t ? { Authorization: `Bearer ${t}` } : {} });
   if (!res.ok) {
     let body: any = {};
-    try { body = await res.json(); } catch { /* */ }
+    try {
+      body = await res.json();
+    } catch {
+      /* */
+    }
     throw new ApiError(res.status, body.title ?? res.statusText, body.detail ?? "");
   }
   const blob = await res.blob();

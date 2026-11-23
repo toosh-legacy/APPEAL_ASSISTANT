@@ -73,8 +73,8 @@ export default function Start() {
         <label className="flex items-start gap-3">
           <input type="checkbox" className="mt-1 h-5 w-5" {...register("consent")} />
           <span>
-            I understand this is not legal or medical advice, that I am the author of my appeal, and that my letter is processed to
-            draft it. Identifiers are tokenized before any AI step. I can delete my case at any time.
+            I understand this is not legal or medical advice, that I am the author of my appeal, and that my letter is processed to draft it. Identifiers are
+            tokenized before any AI step. I can delete my case at any time.
           </span>
         </label>
         {formState.errors.consent && (

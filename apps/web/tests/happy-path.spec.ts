@@ -46,7 +46,10 @@ test("paste -> confirm -> letter -> export", async ({ page }) => {
   expect(dl.suggestedFilename()).toBe("appeal-letter.pdf");
 
   // footnote opens the exact source
-  await page.getByRole("button", { name: /^Source 1/ }).first().click();
+  await page
+    .getByRole("button", { name: /^Source 1/ })
+    .first()
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
 });

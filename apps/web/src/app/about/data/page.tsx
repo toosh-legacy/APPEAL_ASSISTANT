@@ -5,27 +5,24 @@ export default function AboutData() {
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">California Independent Medical Review decisions</h2>
         <p>
-          Source: <strong>California Department of Managed Health Care</strong>, Independent Medical Review (IMR) Determinations, published on the
-          California Health and Human Services Open Data Portal under a Creative Commons Attribution license.
+          Source: <strong>California Department of Managed Health Care</strong>, Independent Medical Review (IMR) Determinations, published on the California
+          Health and Human Services Open Data Portal under a Creative Commons Attribution license.
         </p>
         <p>
-          We use these decisions to show how often independent reviewers overturned plan decisions for similar treatments, and to quote
-          reviewers&apos; findings. These are California decisions; your plan, state and facts may differ. A low overturn rate does not mean you
-          shouldn&apos;t appeal.
+          We use these decisions to show how often independent reviewers overturned plan decisions for similar treatments, and to quote reviewers&apos;
+          findings. These are California decisions; your plan, state and facts may differ. A low overturn rate does not mean you shouldn&apos;t appeal.
         </p>
       </section>
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">Federal regulations</h2>
         <p>
-          From the electronic Code of Federal Regulations (eCFR) API: 29 CFR 2560.503-1, 45 CFR 147.136, 42 CFR Part 422 Subpart M, 42 CFR Part 438
-          Subpart F and parts of 45 CFR Part 149. Federal regulations are in the public domain.
+          From the electronic Code of Federal Regulations (eCFR) API: 29 CFR 2560.503-1, 45 CFR 147.136, 42 CFR Part 422 Subpart M, 42 CFR Part 438 Subpart F
+          and parts of 45 CFR Part 149. Federal regulations are in the public domain.
         </p>
       </section>
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">Plain-language summaries</h2>
-        <p>
-          We wrote our rights summaries from the rules above. They stay marked as drafts until a person checks each one against the rule it cites.
-        </p>
+        <p>We wrote our rights summaries from the rules above. They stay marked as drafts until a person checks each one against the rule it cites.</p>
       </section>
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">Limitations</h2>

@@ -38,7 +38,7 @@ export default function Confirm({ params }: { params: Promise<{ id: string }> })
       const v: Record<string, string> = {};
       for (const { key } of FIELDS) {
         const raw = f[key]?.value;
-        v[key] = Array.isArray(raw) ? raw.join(", ") : raw ?? "";
+        v[key] = Array.isArray(raw) ? raw.join(", ") : (raw ?? "");
       }
       setValues(v);
     }
@@ -73,7 +73,7 @@ export default function Confirm({ params }: { params: Promise<{ id: string }> })
     setError(null);
     const changed: Record<string, string> = {};
     for (const { key } of FIELDS) {
-      const orig = Array.isArray(fields[key]?.value) ? fields[key].value.join(", ") : fields[key]?.value ?? "";
+      const orig = Array.isArray(fields[key]?.value) ? fields[key].value.join(", ") : (fields[key]?.value ?? "");
       if ((values[key] ?? "") !== orig) changed[key] = values[key];
     }
     try {
@@ -90,9 +90,7 @@ export default function Confirm({ params }: { params: Promise<{ id: string }> })
       <h1 className="text-2xl font-bold">Check the facts</h1>
       <p>We found these details in your letter. Fix anything that is wrong. Nothing is drafted until you confirm.</p>
       {c.extraction.injection_flags?.length > 0 && (
-        <p className="rounded-lg bg-amber-50 p-3">
-          Your letter contained text that looked like instructions to a computer. We ignored it.
-        </p>
+        <p className="rounded-lg bg-amber-50 p-3">Your letter contained text that looked like instructions to a computer. We ignored it.</p>
       )}
       <div className="card space-y-4">
         {FIELDS.map(({ key, label }) => {
@@ -102,9 +100,7 @@ export default function Confirm({ params }: { params: Promise<{ id: string }> })
             <div key={key} className={low ? "rounded-lg border border-amber-400 bg-amber-50 p-3" : ""}>
               <label htmlFor={key} className="label">
                 {label}{" "}
-                <span className={`badge ${low ? "bg-amber-200 text-amber-900" : "bg-green-100 text-green-900"}`}>
-                  {low ? "Please check" : "Looks right"}
-                </span>
+                <span className={`badge ${low ? "bg-amber-200 text-amber-900" : "bg-green-100 text-green-900"}`}>{low ? "Please check" : "Looks right"}</span>
               </label>
               {key === "plan_type" ? (
                 <select id={key} className="input" value={values[key] ?? ""} onChange={(e) => setValues({ ...values, [key]: e.target.value })}>

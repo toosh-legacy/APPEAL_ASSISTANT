@@ -60,6 +60,9 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
       - name: Generated API types are up to date
         run: npx openapi-typescript ../../packages/schemas/openapi.json -o /tmp/api-types.ts && diff -q /tmp/api-types.ts src/lib/api-types.ts
       - run: npm run build

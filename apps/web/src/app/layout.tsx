@@ -33,8 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <footer className="mx-auto max-w-3xl px-4 pb-10 text-sm text-slate-700">
           <p>
-            Not legal or medical advice. You are the author of your appeal. IMR data: California Department of Managed Health Care
-            (CC BY). Regulations: eCFR.
+            Not legal or medical advice. You are the author of your appeal. IMR data: California Department of Managed Health Care (CC BY). Regulations: eCFR.
           </p>
         </footer>
       </body>

@@ -43,7 +43,9 @@ function Progress({ id, status }: { id: string; status: string }) {
   const finished = ["READY", "NEEDS_HUMAN"].includes(status);
   return (
     <section className="card" aria-labelledby="progress-h">
-      <h2 id="progress-h" className="text-lg font-bold">Progress</h2>
+      <h2 id="progress-h" className="text-lg font-bold">
+        Progress
+      </h2>
       <ol className="mt-2 space-y-1" aria-live="polite">
         {STEPS.map((s) => {
           const ok = finished || (done[s.agent] ?? 0) > 0;
@@ -102,7 +104,11 @@ function LetterEditor({ id }: { id: string }) {
   if (q.isLoading || !sections) return <p>Loading your letter…</p>;
   if (q.isError) return null;
   const L = q.data;
-  const placeholders = sections.flatMap((s) => s.sentences.map((x: any) => x.text)).join(" ").match(/\[ADD: [^\]]+\]/g)?.length ?? 0;
+  const placeholders =
+    sections
+      .flatMap((s) => s.sentences.map((x: any) => x.text))
+      .join(" ")
+      .match(/\[ADD: [^\]]+\]/g)?.length ?? 0;
 
   function edit(si: number, xi: number, text: string) {
     setSections((prev) => prev!.map((s, i) => (i !== si ? s : { ...s, sentences: s.sentences.map((x: any, j: number) => (j !== xi ? x : { ...x, text })) })));
@@ -116,7 +122,11 @@ function LetterEditor({ id }: { id: string }) {
   async function regenerate(sectionId: string) {
     setMsg(null);
     try {
-      const r = await api(`/v1/cases/${id}/letter/regenerate`, { method: "POST", caseId: id, body: JSON.stringify({ section_id: sectionId, reason: reason[sectionId] ?? "shorter" }) });
+      const r = await api(`/v1/cases/${id}/letter/regenerate`, {
+        method: "POST",
+        caseId: id,
+        body: JSON.stringify({ section_id: sectionId, reason: reason[sectionId] ?? "shorter" }),
+      });
       qc.setQueryData(["letter", id], r.data);
       setSections((r.data as any).sections);
       setMsg("Paragraph regenerated and re-checked.");
@@ -135,15 +145,19 @@ function LetterEditor({ id }: { id: string }) {
   }
   return (
     <section className="card space-y-4" aria-labelledby="letter-h">
-      <h2 id="letter-h" className="text-lg font-bold">Your appeal letter</h2>
+      <h2 id="letter-h" className="text-lg font-bold">
+        Your appeal letter
+      </h2>
       <p className="text-sm">
         Edit anything. Numbers in brackets open the exact source. Fill every <mark className="bg-amber-200">[ADD: …]</mark> before downloading.
       </p>
-      {(L.review?.warnings ?? []).filter((w: any) => w.code !== "placeholder").map((w: any, i: number) => (
-        <p key={i} className="rounded-lg bg-amber-50 p-2 text-sm">
-          {w.message}
-        </p>
-      ))}
+      {(L.review?.warnings ?? [])
+        .filter((w: any) => w.code !== "placeholder")
+        .map((w: any, i: number) => (
+          <p key={i} className="rounded-lg bg-amber-50 p-2 text-sm">
+            {w.message}
+          </p>
+        ))}
       {sections.map((s, si) => (
         <div key={s.id} className="space-y-2 border-t border-slate-200 pt-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -153,7 +167,12 @@ function LetterEditor({ id }: { id: string }) {
                 <label htmlFor={`r-${s.id}`} className="sr-only">
                   How to change {s.title}
                 </label>
-                <select id={`r-${s.id}`} className="input w-auto py-1" value={reason[s.id] ?? "shorter"} onChange={(e) => setReason({ ...reason, [s.id]: e.target.value })}>
+                <select
+                  id={`r-${s.id}`}
+                  className="input w-auto py-1"
+                  value={reason[s.id] ?? "shorter"}
+                  onChange={(e) => setReason({ ...reason, [s.id]: e.target.value })}
+                >
                   <option value="shorter">Shorter</option>
                   <option value="firmer">Firmer</option>
                   <option value="add_detail">Add detail</option>
@@ -212,7 +231,9 @@ function SimilarCases({ id }: { id: string }) {
   const { stats, precedents, explainer, attribution } = q.data;
   return (
     <section className="card space-y-3" aria-labelledby="sim-h">
-      <h2 id="sim-h" className="text-lg font-bold">Similar independent reviews in California</h2>
+      <h2 id="sim-h" className="text-lg font-bold">
+        Similar independent reviews in California
+      </h2>
       {stats && stats.enough_data ? (
         <div>
           <p>
@@ -303,7 +324,9 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
 
       {cls && (
         <section className="card" aria-labelledby="why-h">
-          <h2 id="why-h" className="text-lg font-bold">Why they said no</h2>
+          <h2 id="why-h" className="text-lg font-bold">
+            Why they said no
+          </h2>
           {c.status === "NEEDS_CATEGORY" ? (
             <div className="mt-2 space-y-2">
               <p>We are not sure what kind of denial this is. Pick the one that best matches your letter:</p>
@@ -348,7 +371,9 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
 
       {c.deadlines && (
         <section className="card" aria-labelledby="dl-h">
-          <h2 id="dl-h" className="text-lg font-bold">Your deadline</h2>
+          <h2 id="dl-h" className="text-lg font-bold">
+            Your deadline
+          </h2>
           {dl ? (
             <div className="mt-2 space-y-2">
               <p className="text-xl">
@@ -385,7 +410,9 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
 
       {c.evidence && (
         <section className="card" aria-labelledby="ev-h">
-          <h2 id="ev-h" className="text-lg font-bold">Evidence to gather</h2>
+          <h2 id="ev-h" className="text-lg font-bold">
+            Evidence to gather
+          </h2>
           <ul className="mt-2 space-y-1">
             {c.evidence.map((e: string) => (
               <li key={e}>
