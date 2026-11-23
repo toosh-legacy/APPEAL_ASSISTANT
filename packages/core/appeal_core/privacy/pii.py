@@ -37,6 +37,7 @@ REGEX_RECOGNIZERS: list[tuple[str, re.Pattern[str], float]] = [
         re.compile(r"(?<![\w-])(?:\+?1[\s.-]?)?(?:\(\d{3}\)\s?|\d{3}[\s.-])\d{3}[\s.-]\d{4}(?![\w-])"),
         0.85,
     ),
+    ("PHONE", re.compile(r"(?<![\w.-])\d{3}-\d{4}(?![\w-])"), 0.7),
     (
         "MEMBER_ID",
         re.compile(
@@ -77,7 +78,7 @@ REGEX_RECOGNIZERS: list[tuple[str, re.Pattern[str], float]] = [
     (
         "PERSON",
         re.compile(
-            r"(?:(?i:dear|patient|member|name|enrollee|subscriber|insured|attn|to)[ \t]*:?[ \t]+)"
+            r"\b(?:(?i:dear|patient|member|name|enrollee|subscriber|insured|attn|to|re)[ \t]*:?[ \t]+)"
             r"((?:Mr\.|Ms\.|Mrs\.|Dr\.)?\s?[A-Z][a-z]+(?:[ \t][A-Z]\.?)?[ \t][A-Z][a-z]+(?:-[A-Z][a-z]+)?)"
         ),
         0.75,
@@ -95,6 +96,14 @@ _NOT_NAMES = {
     "Appeals Department",
     "Sir Madam",
 }
+
+
+_ORG_WORDS = re.compile(
+    r"\b(health|care|network|insurance|plan|benefits?|trust|partners|company|co\.?|inc\.?|department|services?|"
+    r"mutual|medical|center|hospital|clinic|group|management|appeals?|grievances?|tel|phone|fax|member|claims?|"
+    r"medicare|medicaid|marketplace|review|form|page)\b",
+    re.I,
+)
 
 
 def regex_detect(text: str) -> list[PIISpan]:
@@ -164,11 +173,23 @@ class LocalPIIDetector:
             for r in engine.analyze(text=text, language="en", entities=self.PRESIDIO_ENTITIES):
                 if r.score < self.presidio_threshold:
                     continue
-                val = text[r.start : r.end]
-                if r.entity_type == "PERSON" and (len(val.split()) < 2 or val in _NOT_NAMES or not val[0].isupper()):
+                start, end = r.start, r.end
+                val = text[start:end]
+                stripped = val.strip()
+                start += len(val) - len(val.lstrip())
+                end = start + len(stripped)
+                val = stripped
+                if r.entity_type == "PERSON" and (
+                    len(val.split()) < 2
+                    or val in _NOT_NAMES
+                    or not val[0].isupper()
+                    or "\n" in val
+                    or re.search(r"\d", val)
+                    or _ORG_WORDS.search(val)
+                ):
                     continue
                 ent = {"PHONE_NUMBER": "PHONE", "EMAIL_ADDRESS": "EMAIL"}.get(r.entity_type, r.entity_type)
-                spans.append(PIISpan(r.start, r.end, ent, val, float(r.score), "presidio"))
+                spans.append(PIISpan(start, end, ent, val, float(r.score), "presidio"))
         return merge_spans(spans)
 
 

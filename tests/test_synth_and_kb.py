@@ -46,8 +46,9 @@ def test_gold_templates_differ_from_train():
 
 
 def test_generator_is_deterministic():
-    from appeal_synth.generate import make_letter
     import random
+
+    from appeal_synth.generate import make_letter
 
     a = make_letter(random.Random("x"), "train", 1)
     b = make_letter(random.Random("x"), "train", 1)

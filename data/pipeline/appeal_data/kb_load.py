@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from appeal_core.kb import deadline_rules, summary_chunks
+
 from appeal_data.common import log_blocker, sha256_text, update_manifest
 
 
@@ -26,10 +27,9 @@ def run(load_db: bool = True) -> dict:
         deadline_rules_disabled=disabled,
     )
     if load_db:
-        from sqlalchemy import delete
-
         from appeal_core.db import session_scope
         from appeal_core.models import KbChunk
+        from sqlalchemy import delete
 
         with session_scope() as s:
             s.execute(delete(KbChunk).where(KbChunk.source_kind == "summary"))

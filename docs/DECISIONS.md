@@ -24,3 +24,14 @@ One line each: **decision** — reason — alternative considered.
 - **Medicare Advantage reconsideration window = 60 calendar days** — that is the current text of 42 CFR 422.582(b) as fetched (an older 65-day figure was not used) — n/a.
 - **Synthetic letters use fictional insurers ("Example Health Plan", ...), Testville, ZIP 00000** — hard rule 8 and no impersonation of real organizations — realistic insurer names.
 - **Gold letters use a different template family and reason-phrase bank from train/validation** — SPEC D4 generalization requirement — same templates.
+- **Job table doubles as the transactional outbox** — inserting the job row in the same transaction as the state change gives the outbox guarantee without a relay process; Service Bus in Phase C gets a relay — separate outbox + relay table now.
+- **Step output and state transition commit in one transaction** — makes crash recovery exact (both or neither); replay returns cached outputs — separate commits.
+- **Per-case data key (AES-256-GCM) wrapped by the master key; the purpose string is bound as AAD** — envelope encryption per SPEC 12; AAD stops ciphertext being reused across fields — one global key.
+- **Presidio PERSON hits are filtered (multi-word, no digits/newlines, no organization words)** — en_core_web_sm tagged insurer names and "Tel 555-01xx" as people, which broke the leak gate — larger spaCy model (slow to download).
+- **Leak gate also blocks untokenized high-precision shapes (email, SSN, phone, ZZTEST IDs)** — fail closed even for identifiers the detector missed — known-values only.
+- **Writer cites a rule only if the rule text supports the sentence (key-term overlap ≥ 0.25); legal sentences without support are dropped** — "if a rule is unknown, the letter says less" (hard rule 3) — always include playbook grounds.
+- **Deadline sentence uses a per-rule paraphrase stored next to the rule (`letter_text`)** — keeps the sentence verifiably supported by the cited paragraph and avoids claiming the user is still within time — a computed "you are within N days" sentence.
+- **Precedent sentences quote the IMR reviewer's favorable conclusion sentence, with fixed non-binding prefix** — grounded by construction, passes the support checker — paraphrase.
+- **Integration tests use the dev database (data already loaded); queue/state tests use `appeal_test`** — loading 42k IMR rows per test session is slow — a fully separate seeded test DB (Phase B).
+- **OTel console exporter writes to `var/logs/traces.jsonl`** — keeps the console readable — stdout.
+- **Ruff ignores B023/B904/B905/B017** — lambdas are executed synchronously inside the loop; others are stylistic — rewrite.

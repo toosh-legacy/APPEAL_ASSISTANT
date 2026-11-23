@@ -21,6 +21,9 @@ Host ports: Postgres 55432, Redis 56379, Azurite 10000, API 8000, web 3100.
 ## Data pipeline
 `make data` downloads the DMHC IMR file and eCFR regulations, validates, profiles and loads them, and generates the synthetic letters. A second run skips unchanged files. Reports: `data/reports/`.
 
+## Backend
+Run `make up`, then `make api` and `make worker` (or `make demo` for API + in-process worker). OpenAPI docs: http://127.0.0.1:8000/docs. Every model call goes through the leak gate (`packages/core/appeal_core/privacy/leak_gate.py`).
+
 ## Status
 See `docs/MORNING_REPORT.md`, `docs/CHANGELOG.md`, `docs/DECISIONS.md` and `docs/BLOCKERS.md`.
 

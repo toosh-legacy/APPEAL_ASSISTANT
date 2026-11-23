@@ -1,0 +1,85 @@
+{
+  "properties": {
+    "category": {
+      "enum": [
+        "medical_necessity",
+        "prior_authorization",
+        "out_of_network",
+        "coding_billing_error",
+        "experimental_investigational",
+        "not_covered_benefit",
+        "timely_filing",
+        "other_unclear"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "probability": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Probability",
+      "type": "number"
+    },
+    "alternatives": {
+      "default": [],
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "enum": [
+              "medical_necessity",
+              "prior_authorization",
+              "out_of_network",
+              "coding_billing_error",
+              "experimental_investigational",
+              "not_covered_benefit",
+              "timely_filing",
+              "other_unclear"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Alternatives",
+      "type": "array"
+    },
+    "rationale": {
+      "title": "Rationale",
+      "type": "string"
+    },
+    "source": {
+      "enum": [
+        "denial_code",
+        "model",
+        "rules",
+        "user",
+        "llm"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "needs_user": {
+      "default": false,
+      "title": "Needs User",
+      "type": "boolean"
+    },
+    "flagged_for_review": {
+      "default": false,
+      "title": "Flagged For Review",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "category",
+    "probability",
+    "rationale",
+    "source"
+  ],
+  "title": "Classification",
+  "type": "object"
+}

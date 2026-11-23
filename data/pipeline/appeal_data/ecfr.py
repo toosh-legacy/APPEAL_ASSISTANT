@@ -356,10 +356,9 @@ def run(load_db: bool = True, force: bool = False) -> dict:
 
 
 def load(chunks: list[dict]) -> None:
-    from sqlalchemy import delete
-
     from appeal_core.db import session_scope
     from appeal_core.models import DatasetManifest, KbChunk, KbSource
+    from sqlalchemy import delete
 
     with session_scope() as s:
         s.execute(delete(KbChunk).where(KbChunk.source_kind == "regulation"))

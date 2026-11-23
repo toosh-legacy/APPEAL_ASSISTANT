@@ -10,8 +10,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from appeal_core.privacy.pii import regex_detect
+
 from appeal_data.common import (
     PROCESSED,
     RAW,
@@ -426,10 +426,9 @@ def run(load_db: bool = True, force: bool = False) -> dict:
 
 
 def load(df: pd.DataFrame, source: str, sha: str) -> None:
-    from sqlalchemy import delete, func, select
-
     from appeal_core.db import session_scope
     from appeal_core.models import DatasetManifest, ImrCase, ImrStats, PrecedentChunk
+    from sqlalchemy import delete, func, select
 
     with session_scope() as s:
         existing = s.scalar(select(func.count()).select_from(ImrCase))

@@ -1,0 +1,109 @@
+{
+  "$defs": {
+    "FieldValue": {
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        }
+      },
+      "title": "FieldValue",
+      "type": "object"
+    }
+  },
+  "description": "Intake output. Values are TOKENIZED: identifiers appear as vault tokens like [MEMBER_ID_1].",
+  "properties": {
+    "fields": {
+      "additionalProperties": {
+        "$ref": "#/$defs/FieldValue"
+      },
+      "title": "Fields",
+      "type": "object"
+    },
+    "missing_fields": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "plan_type": {
+      "anyOf": [
+        {
+          "enum": [
+            "employer_self_funded",
+            "employer_fully_insured",
+            "individual_marketplace",
+            "medicare_advantage",
+            "medicaid_managed_care"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Plan Type"
+    },
+    "state": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "State"
+    },
+    "injection_flags": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Injection Flags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "fields"
+  ],
+  "title": "ExtractedDenial",
+  "type": "object"
+}

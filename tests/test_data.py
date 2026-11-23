@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-
 from appeal_core.privacy.pii import regex_detect
 
 ROOT = Path(__file__).resolve().parents[1]

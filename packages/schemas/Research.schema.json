@@ -1,0 +1,457 @@
+{
+  "$defs": {
+    "Deadline": {
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "days": {
+          "title": "Days",
+          "type": "integer"
+        },
+        "trigger_date": {
+          "title": "Trigger Date",
+          "type": "string"
+        },
+        "due_date": {
+          "title": "Due Date",
+          "type": "string"
+        },
+        "basis_chunk_id": {
+          "title": "Basis Chunk Id",
+          "type": "string"
+        },
+        "basis_citation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Basis Citation"
+        },
+        "letter_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Letter Text"
+        },
+        "cite_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cite Id"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "rule_id",
+        "days",
+        "trigger_date",
+        "due_date",
+        "basis_chunk_id"
+      ],
+      "title": "Deadline",
+      "type": "object"
+    },
+    "NextLevel": {
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "window_text": {
+          "title": "Window Text",
+          "type": "string"
+        },
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "basis_chunk_id": {
+          "title": "Basis Chunk Id",
+          "type": "string"
+        },
+        "cite_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cite Id"
+        }
+      },
+      "required": [
+        "kind",
+        "label",
+        "window_text",
+        "rule_id",
+        "basis_chunk_id"
+      ],
+      "title": "NextLevel",
+      "type": "object"
+    },
+    "PrecedentCite": {
+      "properties": {
+        "cite_id": {
+          "title": "Cite Id",
+          "type": "string"
+        },
+        "chunk_id": {
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "reference_id": {
+          "title": "Reference Id",
+          "type": "string"
+        },
+        "year": {
+          "title": "Year",
+          "type": "integer"
+        },
+        "treatment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Treatment"
+        },
+        "treatment_subcategory": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Treatment Subcategory"
+        },
+        "diagnosis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Diagnosis"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        },
+        "overturned": {
+          "title": "Overturned",
+          "type": "boolean"
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "score": {
+          "default": 0.0,
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cite_id",
+        "chunk_id",
+        "reference_id",
+        "year",
+        "overturned",
+        "excerpt"
+      ],
+      "title": "PrecedentCite",
+      "type": "object"
+    },
+    "RuleCite": {
+      "properties": {
+        "cite_id": {
+          "title": "Cite Id",
+          "type": "string"
+        },
+        "chunk_id": {
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "citation_path": {
+          "title": "Citation Path",
+          "type": "string"
+        },
+        "heading": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Heading"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "regulation",
+            "summary"
+          ],
+          "title": "Source Kind",
+          "type": "string"
+        },
+        "score": {
+          "default": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status"
+        }
+      },
+      "required": [
+        "cite_id",
+        "chunk_id",
+        "citation_path",
+        "text",
+        "source_kind"
+      ],
+      "title": "RuleCite",
+      "type": "object"
+    },
+    "Stats": {
+      "properties": {
+        "scope": {
+          "title": "Scope",
+          "type": "string"
+        },
+        "n": {
+          "title": "N",
+          "type": "integer"
+        },
+        "overturned_n": {
+          "title": "Overturned N",
+          "type": "integer"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rate"
+        },
+        "ci_low": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ci Low"
+        },
+        "ci_high": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ci High"
+        },
+        "by_year": {
+          "default": [],
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "By Year",
+          "type": "array"
+        },
+        "enough_data": {
+          "default": false,
+          "title": "Enough Data",
+          "type": "boolean"
+        },
+        "model_estimate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Estimate"
+        },
+        "model_used": {
+          "default": false,
+          "title": "Model Used",
+          "type": "boolean"
+        },
+        "note": {
+          "default": "These are California decisions. Your plan, state and facts may differ. A low overturn rate does not mean you shouldn't appeal.",
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scope",
+        "n",
+        "overturned_n"
+      ],
+      "title": "Stats",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/RuleCite"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "precedents": {
+      "items": {
+        "$ref": "#/$defs/PrecedentCite"
+      },
+      "title": "Precedents",
+      "type": "array"
+    },
+    "stats": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Stats"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "deadlines": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Deadline"
+      },
+      "title": "Deadlines",
+      "type": "array"
+    },
+    "next_levels": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/NextLevel"
+      },
+      "title": "Next Levels",
+      "type": "array"
+    },
+    "arguments": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Arguments",
+      "type": "array"
+    },
+    "evidence": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "imr_type_prediction": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Imr Type Prediction"
+    }
+  },
+  "required": [
+    "rules",
+    "precedents"
+  ],
+  "title": "Research",
+  "type": "object"
+}

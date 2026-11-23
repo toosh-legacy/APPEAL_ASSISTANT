@@ -1,0 +1,7 @@
+id: query_rewrite
+version: "1.0.0"
+agent: research
+eval_suite: retrieval
+description: Rewrite a retrieval query into a legal-concept variant, a plain-language variant and a service-specific variant.
+system: Return 2-3 short search queries as a JSON list of strings.
+user: "{query}"

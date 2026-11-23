@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "Section": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "sentences": {
+          "items": {
+            "$ref": "#/$defs/Sentence"
+          },
+          "title": "Sentences",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "sentences"
+      ],
+      "title": "Section",
+      "type": "object"
+    },
+    "Sentence": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "citations": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "kind": {
+          "default": "fact",
+          "enum": [
+            "fact",
+            "legal",
+            "precedent",
+            "request",
+            "closing",
+            "header"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "argument_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Argument Id"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "Sentence",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "sections": {
+      "items": {
+        "$ref": "#/$defs/Section"
+      },
+      "title": "Sections",
+      "type": "array"
+    },
+    "placeholders": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Placeholders",
+      "type": "array"
+    },
+    "revision": {
+      "default": 0,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "degraded": {
+      "default": false,
+      "title": "Degraded",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "sections"
+  ],
+  "title": "LetterDraft",
+  "type": "object"
+}

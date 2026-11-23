@@ -6,7 +6,7 @@ import hashlib
 import json
 import random
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +53,7 @@ def update_manifest(name: str, **fields: Any) -> None:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def download(url: str, dest: Path, retries: int = 3, timeout: float = 600.0, params: dict | None = None) -> Path:

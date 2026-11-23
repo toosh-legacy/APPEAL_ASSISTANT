@@ -28,6 +28,7 @@ def compute_deadlines(plan_type: str | None, notice_date: date | None, today: da
             "basis_chunk_id": r["basis_chunk_id"],
             "basis_citation": r["basis_citation"],
             "also_chunk_id": r.get("also_chunk_id"),
+            "letter_text": r.get("letter_text"),
         }
         if today is not None:
             item["days_remaining"] = (due - today).days
