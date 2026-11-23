@@ -82,6 +82,12 @@
       ],
       "url": "https://www.ecfr.gov/api/versioner/v1/titles.json"
     },
+    "embeddings": {
+      "dim": 384,
+      "embedder": "minilm",
+      "rows": 53035,
+      "source": "local"
+    },
     "imr": {
       "downloaded_at": "2026-11-23T07:22:56+00:00",
       "exact_duplicates_dropped": 39,

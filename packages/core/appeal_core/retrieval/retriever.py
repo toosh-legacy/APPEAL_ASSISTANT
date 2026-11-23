@@ -61,16 +61,22 @@ class HybridRetriever:
     def _ranked(self, table: str, queries: list[str], where: str, params: dict, mode: str | None = None) -> list[tuple[str, float]]:
         mode = mode or self.mode
         lists: list[list[str]] = []
-        for q in queries:
-            if mode in ("keyword", "hybrid"):
+        weights: list[float] = []
+        for i, q in enumerate(queries):
+            # The first query counts most. Rewrites only feed the vector side at low weight: appended legal
+            # vocabulary helps semantic matching but floods OR-keyword search (see retrieval_ablation.md).
+            w = 1.0 if i == 0 else 0.25
+            if mode in ("keyword", "hybrid") and (i == 0 or mode == "keyword"):
                 lists.append(self._kw(table, q, where, params))
+                weights.append(w)
             if mode in ("vector", "hybrid"):
                 try:
                     lists.append(self._vec(table, q, where, params))
+                    weights.append(w)
                 except Exception:
                     if mode == "vector":
                         raise
-        return rrf(lists, k=60)
+        return rrf(lists, k=60, weights=weights)
 
     # ------------------------------------------------------------------ rules
     def search_rules(

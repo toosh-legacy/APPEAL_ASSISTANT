@@ -1,0 +1,992 @@
+[
+ {
+  "id": "rq00",
+  "collection": "rules",
+  "query": "deadline to file internal appeal employer plan",
+  "recall@5": 0.5,
+  "mrr": 0.5,
+  "ndcg@10": 0.38685280723454163,
+  "top5": [
+   "reg:29CFR2560.503-1(i)(2)",
+   "sum:employer_plans#your-deadline-to-appeal",
+   "reg:45CFR147.136(d)(2)",
+   "reg:29CFR2560.503-1(i)(1)(i)",
+   "reg:45CFR147.136(b)(2)(ii)(1)"
+  ]
+ },
+ {
+  "id": "rq01",
+  "collection": "rules",
+  "query": "how many days do I have to appeal a denial from my job's health plan",
+  "recall@5": 0.5,
+  "mrr": 0.2,
+  "ndcg@10": 0.23719771276929622,
+  "top5": [
+   "reg:29CFR2560.503-1(f)(2)",
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "reg:29CFR2560.503-1(i)(1)(i)",
+   "sum:employer_plans#your-deadline-to-appeal"
+  ]
+ },
+ {
+  "id": "rq02",
+  "collection": "rules",
+  "query": "individual marketplace plan internal appeal rules",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8503449055347546,
+  "top5": [
+   "reg:45CFR147.136(b)(iii)",
+   "reg:45CFR147.136(b)(1)",
+   "reg:45CFR147.136(b)(2)(i)",
+   "reg:45CFR147.136(b)(2)(ii)(1)",
+   "sum:individual_marketplace#your-deadline-to-appeal"
+  ]
+ },
+ {
+  "id": "rq03",
+  "collection": "rules",
+  "query": "how long do I have to request an external review",
+  "recall@5": 0.5,
+  "mrr": 1.0,
+  "ndcg@10": 0.6131471927654584,
+  "top5": [
+   "reg:45CFR147.136(d)(2)",
+   "reg:45CFR147.136(d)(3)",
+   "reg:45CFR147.136(c)(2)(xi)",
+   "reg:45CFR147.136(d)(iii)(4)",
+   "reg:45CFR147.136(d)(iii)(5)(iv)"
+  ]
+ },
+ {
+  "id": "rq04",
+  "collection": "rules",
+  "query": "external review request four months marketplace plan",
+  "recall@5": 0.5,
+  "mrr": 0.5,
+  "ndcg@10": 0.5912352048230277,
+  "top5": [
+   "reg:45CFR147.136(c)(1)(i)",
+   "reg:45CFR147.136(d)(2)",
+   "reg:45CFR147.136(d)(iii)(4)",
+   "reg:45CFR147.136(c)(2)",
+   "reg:45CFR147.136(d)"
+  ]
+ },
+ {
+  "id": "rq05",
+  "collection": "rules",
+  "query": "Medicare Advantage reconsideration filing deadline",
+  "recall@5": 0.6666666666666666,
+  "mrr": 0.5,
+  "ndcg@10": 0.6447841584694202,
+  "top5": [
+   "reg:42CFR422.582(c)(1)",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.633(d)(1)",
+   "reg:42CFR422.633(d)(3)(i)",
+   "reg:42CFR422.582(b)"
+  ]
+ },
+ {
+  "id": "rq06",
+  "collection": "rules",
+  "query": "how long to appeal Medicare Advantage organization determination",
+  "recall@5": 0.5,
+  "mrr": 0.2,
+  "ndcg@10": 0.4415801103577823,
+  "top5": [
+   "reg:42CFR422.631(d)(2)(i)(A)",
+   "reg:42CFR422.631(d)(1)(i)",
+   "reg:42CFR422.633(d)(1)",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.582(b)"
+  ]
+ },
+ {
+  "id": "rq07",
+  "collection": "rules",
+  "query": "Medicaid managed care appeal deadline",
+  "recall@5": 0.5,
+  "mrr": 1.0,
+  "ndcg@10": 0.6131471927654584,
+  "top5": [
+   "sum:medicaid_managed_care#your-deadline-to-appeal",
+   "sum:medicaid_managed_care#expedited-appeals",
+   "sum:medicaid_managed_care#state-fair-hearing",
+   "reg:42CFR438.408(c)(2)(iii)",
+   "reg:42CFR438.408(b)(1)"
+  ]
+ },
+ {
+  "id": "rq08",
+  "collection": "rules",
+  "query": "state fair hearing time limit medicaid",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.9197207891481876,
+  "top5": [
+   "reg:42CFR438.408(f)(2)",
+   "reg:42CFR438.420(c)",
+   "sum:medicaid_managed_care#state-fair-hearing",
+   "reg:42CFR438.408(f)(1)",
+   "reg:42CFR438.402(c)(1)(i)"
+  ]
+ },
+ {
+  "id": "rq09",
+  "collection": "rules",
+  "query": "urgent care appeal decision 72 hours employer plan",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8772153153380493,
+  "top5": [
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(f)(2)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "sum:employer_plans#urgent-care-appeals",
+   "reg:29CFR2560.503-1(h)(3)"
+  ]
+ },
+ {
+  "id": "rq10",
+  "collection": "rules",
+  "query": "copies of documents relevant to my claim free of charge",
+  "recall@5": 0.75,
+  "mrr": 1.0,
+  "ndcg@10": 0.9709286432396581,
+  "top5": [
+   "reg:29CFR2560.503-1(h)(2)(ii)",
+   "reg:29CFR2560.503-1(g)(1)(iii)",
+   "reg:29CFR2560.503-1(j)",
+   "reg:29CFR2560.503-1(h)(4)",
+   "reg:29CFR2560.503-1(i)(5)"
+  ]
+ },
+ {
+  "id": "rq11",
+  "collection": "rules",
+  "query": "consult a health care professional with appropriate training on appeal",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "sum:employer_plans#medical-judgment-on-appeal",
+   "reg:29CFR2560.503-1(h)(3)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "sum:employer_plans#urgent-care-appeals",
+   "reg:45CFR147.136(b)(4)"
+  ]
+ },
+ {
+  "id": "rq12",
+  "collection": "rules",
+  "query": "appeal review takes into account all comments documents records submitted",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:29CFR2560.503-1(h)(2)(ii)",
+   "sum:employer_plans#what-a-full-and-fair-review-includes",
+   "reg:45CFR147.136(b)(G)",
+   "reg:45CFR147.136(a)(2)",
+   "reg:45CFR147.136(d)(iii)(5)(A)"
+  ]
+ },
+ {
+  "id": "rq13",
+  "collection": "rules",
+  "query": "emergency services without prior authorization out of network",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8772153153380493,
+  "top5": [
+   "reg:45CFR149.110(b)",
+   "reg:45CFR149.110(a)",
+   "reg:45CFR149.410(a)",
+   "sum:surprise_billing#emergency-care-without-prior-approval",
+   "reg:45CFR149.110(b)(4)"
+  ]
+ },
+ {
+  "id": "rq14",
+  "collection": "rules",
+  "query": "expedited reconsideration Medicare Advantage 72 hours",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:42CFR422.590(e)(1)",
+   "sum:medicare_advantage#expedited-fast-reconsideration",
+   "reg:42CFR422.633(f)",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.619(a)(1)"
+  ]
+ },
+ {
+  "id": "rq15",
+  "collection": "rules",
+  "query": "independent outside entity review when MA plan affirms denial",
+  "recall@5": 0.3333333333333333,
+  "mrr": 0.25,
+  "ndcg@10": 0.499800561367962,
+  "top5": [
+   "reg:42CFR422.618(c)(1)",
+   "reg:42CFR422.618(b)(1)",
+   "reg:42CFR422.590(e)(5)",
+   "reg:42CFR422.592(a)",
+   "reg:42CFR422.619(b)(1)"
+  ]
+ },
+ {
+  "id": "rq16",
+  "collection": "rules",
+  "query": "continuation of benefits while medicaid appeal pending",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8922108454754891,
+  "top5": [
+   "reg:42CFR438.420(b)",
+   "reg:42CFR438.420(c)",
+   "reg:42CFR438.420(d)",
+   "reg:42CFR438.402(c)(2)",
+   "reg:42CFR438.420(a)"
+  ]
+ },
+ {
+  "id": "rq17",
+  "collection": "rules",
+  "query": "expedited appeal medicaid managed care timeframe",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.9197207891481876,
+  "top5": [
+   "sum:medicaid_managed_care#expedited-appeals",
+   "sum:medicaid_managed_care#your-deadline-to-appeal",
+   "reg:42CFR438.408(b)(1)",
+   "sum:medicaid_managed_care#state-fair-hearing",
+   "reg:42CFR438.404(c)"
+  ]
+ },
+ {
+  "id": "rq18",
+  "collection": "rules",
+  "query": "what must a denial notice say specific reason for adverse determination",
+  "recall@5": 0.3333333333333333,
+  "mrr": 1.0,
+  "ndcg@10": 0.46927872602275644,
+  "top5": [
+   "reg:29CFR2560.503-1(g)(1)",
+   "reg:45CFR147.136(b)(3)(ii)",
+   "reg:45CFR147.136(b)(3)(ii)(2)",
+   "reg:29CFR2560.503-1(m)(4)",
+   "reg:45CFR147.136(b)(2)(ii)(1)"
+  ]
+ },
+ {
+  "id": "rq19",
+  "collection": "rules",
+  "query": "denial notice must include the denial code and its meaning",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:45CFR147.136(b)(3)",
+   "reg:45CFR147.136(b)(3)(ii)(2)~1",
+   "reg:45CFR147.136(b)(2)(ii)(1)~1",
+   "sum:general_rights#the-denial-notice-must-explain-itself",
+   "reg:29CFR2560.503-1(m)(4)"
+  ]
+ },
+ {
+  "id": "rq20",
+  "collection": "rules",
+  "query": "post-service claim appeal decision 60 days",
+  "recall@5": 1.0,
+  "mrr": 0.3333333333333333,
+  "ndcg@10": 0.5,
+  "top5": [
+   "reg:29CFR2560.503-1(f)(3)",
+   "reg:29CFR2560.503-1(f)(2)(iii)(B)",
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "reg:29CFR2560.503-1(c)(3)"
+  ]
+ },
+ {
+  "id": "rq21",
+  "collection": "rules",
+  "query": "pre-service claim appeal decision 30 days group health plan",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "reg:29CFR2560.503-1(f)(2)",
+   "reg:29CFR2560.503-1(f)(2)(iii)(B)",
+   "reg:29CFR2560.503-1(c)(3)"
+  ]
+ },
+ {
+  "id": "rq22",
+  "collection": "rules",
+  "query": "initial benefit determination urgent care claim 72 hours",
+  "recall@5": 1.0,
+  "mrr": 0.5,
+  "ndcg@10": 0.6309297535714575,
+  "top5": [
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(f)(2)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "reg:29CFR2560.503-1(i)(1)(i)",
+   "reg:45CFR147.136(b)(3)(ii)"
+  ]
+ },
+ {
+  "id": "rq23",
+  "collection": "rules",
+  "query": "plan must not defer to initial adverse determination on appeal",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:29CFR2560.503-1(h)(3)",
+   "reg:29CFR2560.503-1(i)(2)",
+   "reg:29CFR2560.503-1(h)(1)",
+   "reg:29CFR2560.503-1(c)(3)",
+   "reg:45CFR147.136(b)(2)(ii)(1)"
+  ]
+ },
+ {
+  "id": "rq24",
+  "collection": "rules",
+  "query": "appeal decided by someone who did not make the initial decision",
+  "recall@5": 1.0,
+  "mrr": 0.25,
+  "ndcg@10": 0.43067655807339306,
+  "top5": [
+   "reg:29CFR2560.503-1(c)(3)",
+   "reg:45CFR147.136(a)(2)",
+   "reg:45CFR147.136(b)(1)~1",
+   "reg:29CFR2560.503-1(h)(3)",
+   "reg:45CFR147.136(b)(4)"
+  ]
+ },
+ {
+  "id": "rq25",
+  "collection": "rules",
+  "query": "rescission of coverage counts as adverse benefit determination",
+  "recall@5": 0.75,
+  "mrr": 1.0,
+  "ndcg@10": 0.9709286432396581,
+  "top5": [
+   "reg:45CFR147.136(b)(3)(ii)",
+   "reg:45CFR147.136(b)(2)(i)",
+   "reg:45CFR147.136(d)(1)(i)",
+   "reg:45CFR147.136(b)(2)(ii)(1)",
+   "reg:45CFR147.136(d)(1)(ii)"
+  ]
+ },
+ {
+  "id": "rq26",
+  "collection": "rules",
+  "query": "deemed exhausted internal appeals plan failed to follow rules",
+  "recall@5": 1.0,
+  "mrr": 0.5,
+  "ndcg@10": 0.6509209298071326,
+  "top5": [
+   "reg:45CFR147.136(b)(2)",
+   "reg:45CFR147.136(b)(4)",
+   "reg:29CFR2560.503-1(c)(3)",
+   "reg:45CFR147.136(b)(1)~1",
+   "reg:45CFR147.136(c)(2)"
+  ]
+ },
+ {
+  "id": "rq27",
+  "collection": "rules",
+  "query": "culturally and linguistically appropriate notices",
+  "recall@5": 0.5,
+  "mrr": 1.0,
+  "ndcg@10": 0.810582531061383,
+  "top5": [
+   "reg:45CFR147.136(e)(1)",
+   "reg:45CFR149.410(b)(2)",
+   "reg:45CFR149.420(c)",
+   "reg:45CFR149.420(f)(1)",
+   "reg:45CFR147.136(b)(2)(ii)(1)"
+  ]
+ },
+ {
+  "id": "rq28",
+  "collection": "rules",
+  "query": "expedited external review urgent medical condition",
+  "recall@5": 0.8,
+  "mrr": 1.0,
+  "ndcg@10": 0.9669850519151656,
+  "top5": [
+   "reg:45CFR147.136(d)(iii)(5)(A)",
+   "reg:45CFR147.136(d)(iii)(5)(iv)",
+   "reg:45CFR147.136(c)(2)",
+   "reg:45CFR147.136(c)(2)(xv)",
+   "reg:45CFR147.136(d)(iii)(5)(7)"
+  ]
+ },
+ {
+  "id": "rq29",
+  "collection": "rules",
+  "query": "continued coverage pending outcome of appeal concurrent care",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:45CFR147.136(b)(G)",
+   "reg:45CFR147.136(b)(iii)",
+   "reg:29CFR2560.503-1(c)(3)",
+   "reg:29CFR2560.503-1(f)(2)(ii)(B)",
+   "reg:45CFR147.136(b)(4)"
+  ]
+ },
+ {
+  "id": "rq30",
+  "collection": "rules",
+  "query": "standard reconsideration Medicare Advantage decision 30 days",
+  "recall@5": 0.4,
+  "mrr": 1.0,
+  "ndcg@10": 0.5067837010870873,
+  "top5": [
+   "reg:42CFR422.590(a)(1)",
+   "reg:42CFR422.590(c)(1)",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.633(f)",
+   "reg:42CFR422.633(e)(4)"
+  ]
+ },
+ {
+  "id": "rq31",
+  "collection": "rules",
+  "query": "who may request reconsideration Medicare Advantage",
+  "recall@5": 0.0,
+  "mrr": 0.0,
+  "ndcg@10": 0.0,
+  "top5": [
+   "reg:42CFR422.578",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.584(a)",
+   "reg:42CFR422.634(a)",
+   "reg:42CFR422.582(f)"
+  ]
+ },
+ {
+  "id": "rq32",
+  "collection": "rules",
+  "query": "Medicare Advantage ALJ hearing request 60 days",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:42CFR422.602(b)(1)",
+   "sum:medicare_advantage#your-deadline-to-ask-for-reconsideration",
+   "reg:42CFR422.568(b)(1)",
+   "reg:42CFR422.562(b)(4)(ii)",
+   "reg:42CFR422.631(d)(2)(i)(A)"
+  ]
+ },
+ {
+  "id": "rq33",
+  "collection": "rules",
+  "query": "good cause extension for filing reconsideration late",
+  "recall@5": 0.4,
+  "mrr": 1.0,
+  "ndcg@10": 0.3833427799846345,
+  "top5": [
+   "reg:42CFR422.582(c)(1)",
+   "reg:42CFR422.633(d)(3)(i)",
+   "reg:42CFR422.590(f)(1)",
+   "reg:42CFR422.633(f)(3)(i)",
+   "reg:42CFR422.568(b)(2)(i)"
+  ]
+ },
+ {
+  "id": "rq34",
+  "collection": "rules",
+  "query": "medicaid grievance filed at any time",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:42CFR438.402(c)(2)",
+   "reg:42CFR438.404(c)",
+   "reg:42CFR438.402(c)(3)(i)",
+   "reg:42CFR438.406(b)",
+   "reg:42CFR438.400(b)(4)"
+  ]
+ },
+ {
+  "id": "rq35",
+  "collection": "rules",
+  "query": "medicaid plan must provide notice of adverse benefit determination in writing",
+  "recall@5": 0.6,
+  "mrr": 1.0,
+  "ndcg@10": 0.7016782760391698,
+  "top5": [
+   "reg:42CFR438.404(b)",
+   "reg:42CFR438.404(a)",
+   "reg:42CFR438.406(b)(2)(iii)",
+   "reg:42CFR438.400(b)(4)",
+   "reg:42CFR438.404(c)"
+  ]
+ },
+ {
+  "id": "rq36",
+  "collection": "rules",
+  "query": "medicaid appeal resolution standard timeframe 30 calendar days",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "reg:42CFR438.408(b)(1)",
+   "sum:medicaid_managed_care#your-deadline-to-appeal",
+   "reg:42CFR438.404(c)",
+   "reg:42CFR438.408(c)(1)",
+   "sum:medicaid_managed_care#expedited-appeals"
+  ]
+ },
+ {
+  "id": "rq37",
+  "collection": "rules",
+  "query": "surprise billing out-of-network provider at in-network facility",
+  "recall@5": 0.5,
+  "mrr": 0.3333333333333333,
+  "ndcg@10": 0.3065735963827292,
+  "top5": [
+   "reg:45CFR149.420(a)",
+   "reg:45CFR149.420(i)",
+   "sum:surprise_billing#out-of-network-providers-at-in-network-facilities",
+   "reg:45CFR149.110(b)(3)(ii)",
+   "reg:45CFR149.410(b)(2)"
+  ]
+ },
+ {
+  "id": "rq38",
+  "collection": "rules",
+  "query": "air ambulance out of network cost sharing",
+  "recall@5": 0.75,
+  "mrr": 0.5,
+  "ndcg@10": 0.6096199500078984,
+  "top5": [
+   "reg:45CFR149.120(c)(5)",
+   "reg:45CFR149.130(a)",
+   "reg:45CFR149.130(b)",
+   "reg:45CFR149.130(b)(4)",
+   "sum:surprise_billing#out-of-network-providers-at-in-network-facilities"
+  ]
+ },
+ {
+  "id": "rq39",
+  "collection": "rules",
+  "query": "notice and consent to waive balance billing protections",
+  "recall@5": 0.8,
+  "mrr": 1.0,
+  "ndcg@10": 0.6122496142821665,
+  "top5": [
+   "reg:45CFR149.420(h)",
+   "reg:45CFR149.420(c)(2)",
+   "reg:45CFR149.410(d)",
+   "reg:45CFR149.420(c)(3)",
+   "reg:45CFR149.420(i)"
+  ]
+ },
+ {
+  "id": "rq40",
+  "collection": "rules",
+  "query": "emergency cost sharing same as in network",
+  "recall@5": 0.5,
+  "mrr": 0.25,
+  "ndcg@10": 0.46845052016107697,
+  "top5": [
+   "reg:45CFR149.120(c)(5)",
+   "reg:45CFR149.410(a)",
+   "reg:45CFR149.130(b)",
+   "sum:surprise_billing#out-of-network-emergency-care",
+   "reg:45CFR149.110(a)"
+  ]
+ },
+ {
+  "id": "rq41",
+  "collection": "rules",
+  "query": "keep copies and send appeal in writing",
+  "recall@5": 1.0,
+  "mrr": 0.5,
+  "ndcg@10": 0.6309297535714575,
+  "top5": [
+   "reg:45CFR147.136(b)(G)",
+   "sum:general_rights#keep-copies-and-send-in-writing",
+   "sum:employer_plans#what-a-full-and-fair-review-includes",
+   "reg:29CFR2560.503-1(c)(3)",
+   "reg:45CFR147.136(b)(4)"
+  ]
+ },
+ {
+  "id": "pq00",
+  "collection": "precedents",
+  "query": "MRI lumbar spine medical necessity",
+  "recall@5": 0.8,
+  "mrr": 1.0,
+  "ndcg@10": 0.905211635630449,
+  "top5": [
+   "MN25-45688#0",
+   "MN14-18561#0",
+   "MN19-31963#0",
+   "EI19-31829#0",
+   "MN24-41574#0"
+  ]
+ },
+ {
+  "id": "pq01",
+  "collection": "precedents",
+  "query": "MRI of the brain headaches",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.9305687780632227,
+  "top5": [
+   "MN21-34957#0",
+   "MN19-31087#0",
+   "MN05-5002#0",
+   "MN04-3761#0",
+   "MN15-20627#0"
+  ]
+ },
+ {
+  "id": "pq02",
+  "collection": "precedents",
+  "query": "residential treatment center eating disorder",
+  "recall@5": 0.0,
+  "mrr": 0.1111111111111111,
+  "ndcg@10": 0.06625422345438903,
+  "top5": [
+   "MN16-24057#0",
+   "MN14-15957#0",
+   "MN08-8193#0",
+   "MN20-32642#0",
+   "MN07-7161#0"
+  ]
+ },
+ {
+  "id": "pq03",
+  "collection": "precedents",
+  "query": "residential treatment substance use disorder",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.9363792118010481,
+  "top5": [
+   "MN11-12054#0",
+   "MN12-14386#0",
+   "MN08-7717#0",
+   "MN20-34191#1",
+   "MN12-14484#0"
+  ]
+ },
+ {
+  "id": "pq04",
+  "collection": "precedents",
+  "query": "applied behavior analysis autism therapy hours",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.9363792118010481,
+  "top5": [
+   "MN21-35381#0",
+   "MN18-29695#0",
+   "MN22-36686#0",
+   "MN12-14395#0",
+   "MN10-11839#0"
+  ]
+ },
+ {
+  "id": "pq05",
+  "collection": "precedents",
+  "query": "proton beam therapy prostate cancer",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN24-42824#0",
+   "MN24-42353#0",
+   "MN13-15134#0",
+   "MN25-43474#0",
+   "EI20-33999#0"
+  ]
+ },
+ {
+  "id": "pq06",
+  "collection": "precedents",
+  "query": "transcranial magnetic stimulation depression",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.933745776545611,
+  "top5": [
+   "MN15-19383#0",
+   "EI11-12527#0",
+   "EI11-12406#0",
+   "MN16-24034#0",
+   "MN16-21848#0"
+  ]
+ },
+ {
+  "id": "pq07",
+  "collection": "precedents",
+  "query": "gastric bypass bariatric surgery obesity",
+  "recall@5": 0.0,
+  "mrr": 0.1111111111111111,
+  "ndcg@10": 0.06625422345438903,
+  "top5": [
+   "MN05-4733#0",
+   "MN07-7059#0",
+   "MN24-41544#0",
+   "MN17-25935#0",
+   "EI22-37165#0"
+  ]
+ },
+ {
+  "id": "pq08",
+  "collection": "precedents",
+  "query": "IVIG immune globulin infusion",
+  "recall@5": 0.8,
+  "mrr": 0.5,
+  "ndcg@10": 0.7162874455029681,
+  "top5": [
+   "MN24-41266#0",
+   "MN17-27104#0",
+   "EI24-41847#0",
+   "MN19-30405#0",
+   "MN19-31106#0"
+  ]
+ },
+ {
+  "id": "pq09",
+  "collection": "precedents",
+  "query": "genetic testing hereditary cancer BRCA",
+  "recall@5": 0.4,
+  "mrr": 1.0,
+  "ndcg@10": 0.4818998405251556,
+  "top5": [
+   "MN23-39205#0",
+   "EI16-22887#0",
+   "EI19-32265#0",
+   "MN09-9167#0",
+   "MN06-5439#0"
+  ]
+ },
+ {
+  "id": "pq10",
+  "collection": "precedents",
+  "query": "viscosupplementation knee injection osteoarthritis",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN23-38882#0",
+   "MN20-32375#0",
+   "MN23-38624#0",
+   "MN18-29829#0",
+   "MN23-38778#0"
+  ]
+ },
+ {
+  "id": "pq11",
+  "collection": "precedents",
+  "query": "spinal fusion lumbar degenerative disc",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN11-12034#0",
+   "MN11-12030#0",
+   "MN10-10695#0",
+   "MN12-13474#0",
+   "MN19-31691#0"
+  ]
+ },
+ {
+  "id": "pq12",
+  "collection": "precedents",
+  "query": "artificial disc replacement cervical",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "EI10-11223#0",
+   "EI16-22528#0",
+   "MN21-35453#0",
+   "EI16-23963#0",
+   "MN25-44625#0"
+  ]
+ },
+ {
+  "id": "pq13",
+  "collection": "precedents",
+  "query": "PET scan cancer staging",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "EI04-3744#1",
+   "MN04-3500#0",
+   "EI04-3528#1",
+   "EI05-4118#1",
+   "EI12-14247#0"
+  ]
+ },
+ {
+  "id": "pq14",
+  "collection": "precedents",
+  "query": "speech therapy child developmental delay",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN11-12881#0",
+   "MN11-13310#0",
+   "MN09-10024#0",
+   "MN11-12855#0",
+   "MN11-12345#0"
+  ]
+ },
+ {
+  "id": "pq15",
+  "collection": "precedents",
+  "query": "physical therapy outpatient visits after surgery",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN16-23369#0",
+   "MN19-31593#0",
+   "MN24-41472#0",
+   "MN06-5507#0",
+   "MN20-32920#0"
+  ]
+ },
+ {
+  "id": "pq16",
+  "collection": "precedents",
+  "query": "Botox injections chronic migraine",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "EI12-14219#0",
+   "MN17-26005#0",
+   "MN22-37169#0",
+   "EI07-6667#0",
+   "MN24-40937#0"
+  ]
+ },
+ {
+  "id": "pq17",
+  "collection": "precedents",
+  "query": "weight loss medication obesity",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN22-38370#0",
+   "MN24-41038#0",
+   "MN24-42109#0",
+   "EI23-40093#0",
+   "MN24-42528#0"
+  ]
+ },
+ {
+  "id": "pq18",
+  "collection": "precedents",
+  "query": "breast reduction surgery back pain",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN25-45652#0",
+   "MN25-43493#0",
+   "MN25-44330#0",
+   "MN24-40854#0",
+   "MN06-5432#0"
+  ]
+ },
+ {
+  "id": "pq19",
+  "collection": "precedents",
+  "query": "acupuncture chronic pain",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN23-40286#0",
+   "MN22-37827#0",
+   "MN22-36801#0",
+   "MN19-30417#0",
+   "MN20-34422#0"
+  ]
+ },
+ {
+  "id": "pq20",
+  "collection": "precedents",
+  "query": "partial hospitalization program mental health",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8630152897016882,
+  "top5": [
+   "MN13-15518#0",
+   "MN14-18465#0",
+   "MN08-8028#0",
+   "MN15-21214#0",
+   "MN14-18915#0"
+  ]
+ },
+ {
+  "id": "pq21",
+  "collection": "precedents",
+  "query": "radiofrequency ablation back pain facet",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN23-39913#0",
+   "EI04-3711#0",
+   "MN21-35854#0",
+   "MN16-21996#0",
+   "MN22-37838#0"
+  ]
+ },
+ {
+  "id": "pq22",
+  "collection": "precedents",
+  "query": "continuous glucose monitor diabetes",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 1.0,
+  "top5": [
+   "MN23-38557#0",
+   "MN24-42508#0",
+   "MN24-42619#0",
+   "MN17-26134#0",
+   "MN23-38736#0"
+  ]
+ },
+ {
+  "id": "pq23",
+  "collection": "precedents",
+  "query": "experimental treatment clinical trial cancer drug",
+  "recall@5": 1.0,
+  "mrr": 1.0,
+  "ndcg@10": 0.8579809428223729,
+  "top5": [
+   "EI05-4988#1",
+   "EI16-24311#0",
+   "EI16-22412#0",
+   "EI05-5053#2",
+   "EI06-5610#3"
+  ]
+ }
+]

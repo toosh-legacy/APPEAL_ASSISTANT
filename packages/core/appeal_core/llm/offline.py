@@ -167,20 +167,38 @@ SYNONYMS = {
 }
 
 
+# Plain-language -> regulatory vocabulary. Each matched concept appends its legal terms to the query
+# (variant 2) and contributes a short legal-concept query (variant 3). The original query always stays first.
+CONCEPTS: list[tuple[str, str]] = [
+    (r"deadline|how long|how many days|time limit|timeframe|time frame", "days following receipt of notification filed within calendar days"),
+    (r"external review|independent review", "external review independent review organization"),
+    (r"cop(y|ies)|documents|records|my file", "reasonable access free of charge documents records relevant"),
+    (r"doctor|health care professional|expert|specialist", "consult health care professional appropriate training experience medical judgment"),
+    (r"job|employer|work", "group health plan"),
+    (r"marketplace|individual", "individual health insurance coverage issuer"),
+    (r"medicare advantage|\bma\b", "MA organization enrollee organization determination"),
+    (r"medicaid", "MCO PIHP PAHP enrollee"),
+    (r"surprise|balance bill", "nonparticipating provider balance billing"),
+    (r"emergenc", "emergency services emergency medical condition"),
+    (r"urgent|fast|expedited", "urgent care expedited"),
+    (r"notice|letter|explain", "notification adverse benefit determination"),
+    (r"denial|denied|deny", "adverse benefit determination"),
+    (r"pending|while .* appeal|keep (getting|my)", "continued coverage pending outcome"),
+    (r"medical necessity|medically necessary", "medical necessity medical judgment"),
+    (r"experimental|investigational", "experimental investigational medical judgment"),
+]
+
+
 def offline_rewrite(query: str) -> list[str]:
     q = query.lower()
-    variants = [query]
-    for key, syns in SYNONYMS.items():
-        if key.replace("_", " ") in q or key in q:
-            variants.extend(syns[:2])
-    if "appeal" in q and "deadline" not in q:
-        variants.append("full and fair review appeal adverse benefit determination")
-    seen, out = set(), []
-    for v in variants:
-        if v not in seen:
-            seen.add(v)
-            out.append(v)
-    return out[:3]
+    hits = [terms for pat, terms in CONCEPTS if re.search(pat, q)]
+    for key, syns in SYNONYMS.items():  # category keys used by the Research agent
+        if key in q or key.replace("_", " ") in q:
+            hits.append(syns[0])
+    if not hits:
+        return [query]
+    expansion = " ".join(dict.fromkeys(" ".join(hits).split()))
+    return [query, f"{query} {expansion}", hits[0]]
 
 
 # ------------------------------------------------------------------ writing

@@ -5,13 +5,15 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 
-def rrf(rankings: Sequence[Sequence[str]], k: int = 60) -> list[tuple[str, float]]:
+def rrf(rankings: Sequence[Sequence[str]], k: int = 60, weights: Sequence[float] | None = None) -> list[tuple[str, float]]:
+    """Weighted RRF: list i contributes weights[i] / (k + rank)."""
     scores: dict[str, float] = {}
-    for ranking in rankings:
+    weights = weights or [1.0] * len(rankings)
+    for ranking, w in zip(rankings, weights, strict=True):
         seen = set()
         for rank, doc in enumerate(ranking, start=1):
             if doc in seen:
                 continue
             seen.add(doc)
-            scores[doc] = scores.get(doc, 0.0) + 1.0 / (k + rank)
+            scores[doc] = scores.get(doc, 0.0) + w / (k + rank)
     return sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
