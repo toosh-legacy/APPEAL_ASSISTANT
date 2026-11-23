@@ -112,11 +112,13 @@ def suite_retrieval() -> Suite:
 
     m = json.loads((ROOT / "data" / "manifest.json").read_text())
     synthetic = m["datasets"].get("imr", {}).get("source") == "synthetic"
-    s = Suite("retrieval", "recall@5 >= 0.85 (hybrid RRF + rewriting)", blocking=not synthetic)
+    s = Suite("retrieval", "recall@5 >= 0.85 (production retrieval path)", blocking=not synthetic)
     if synthetic:
         s.notes.append("IMR data is the synthetic sample (CI mode): precedent questions cannot be answered; gate is non-blocking")
     res = ablation(write=True)
-    best = res["hybrid RRF + query rewriting"]["all"]
+    from appeal_evals.retrieval import PRODUCTION
+
+    best = res[PRODUCTION]["all"]
     s.metrics = {"production": best, "ablation": {k: v["all"] for k, v in res.items()}}
     s.passed = best["recall@5"] >= 0.85
     return s

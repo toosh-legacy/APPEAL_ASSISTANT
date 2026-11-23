@@ -32,15 +32,15 @@ def metrics_for(ranked: list[str], relevant: set[str]) -> dict[str, float]:
     return {"recall@5": recall5, "mrr": rr, "ndcg@10": dcg / idcg if idcg else 0.0}
 
 
-def run_config(retr: HybridRetriever, gold: list[dict], mode: str, rewrite: bool) -> tuple[dict, list[dict]]:
+def run_config(retr: HybridRetriever, gold: list[dict], mode: str, rewrite: bool, diversify: bool = False) -> tuple[dict, list[dict]]:
     per = []
     for g in gold:
         queries = offline_rewrite(g["query"]) if rewrite else [g["query"]]
         if g["collection"] == "rules":
-            res = retr.search_rules(queries, plan_type=g.get("plan_type"), k=10, mode=mode, diversify=False)
+            res = retr.search_rules(queries, plan_type=g.get("plan_type"), k=10, mode=mode, diversify=diversify)
             ranked = [r["id"] for r in res]
         else:
-            res = retr.search_precedents(queries, k=10, mode=mode, diversify=False)
+            res = retr.search_precedents(queries, k=10, mode=mode, diversify=diversify)
             ranked = [r["id"] for r in res]
         m = metrics_for(ranked, set(g["relevant"]))
         per.append({"id": g["id"], "collection": g["collection"], "query": g["query"], **m, "top5": ranked[:5]})
@@ -51,7 +51,14 @@ def run_config(retr: HybridRetriever, gold: list[dict], mode: str, rewrite: bool
     return agg, per
 
 
-CONFIGS = [("keyword only", "keyword", False), ("vector only", "vector", False), ("hybrid RRF", "hybrid", False), ("hybrid RRF + query rewriting", "hybrid", True)]
+PRODUCTION = "hybrid RRF + rewriting + diversification (production)"
+CONFIGS = [
+    ("keyword only", "keyword", False, False),
+    ("vector only", "vector", False, False),
+    ("hybrid RRF", "hybrid", False, False),
+    ("hybrid RRF + query rewriting", "hybrid", True, False),
+    (PRODUCTION, "hybrid", True, True),
+]
 
 
 def ablation(url: str | None = None, write: bool = True) -> dict:
@@ -59,10 +66,10 @@ def ablation(url: str | None = None, write: bool = True) -> dict:
     retr = HybridRetriever(url=url)
     results = {}
     per_best = None
-    for name, mode, rw in CONFIGS:
-        agg, per = run_config(retr, gold, mode, rw)
+    for name, mode, rw, div in CONFIGS:
+        agg, per = run_config(retr, gold, mode, rw, div)
         results[name] = agg
-        if name == "hybrid RRF + query rewriting":
+        if name == PRODUCTION:
             per_best = per
     if write:
         REPORTS.mkdir(parents=True, exist_ok=True)
@@ -81,13 +88,15 @@ def ablation(url: str | None = None, write: bool = True) -> dict:
         lines += [
             "",
             "Notes:",
-            "- Production config = hybrid RRF + query rewriting: the user's query feeds both keyword and vector search (weight 1.0); "
+            "- Query rewriting: the user's query feeds both keyword and vector search (weight 1.0); "
             "dictionary rewrites feed only the vector side (weight 0.25). Rewrites on the keyword side hurt (OR-queries with many legal terms match everything).",
+            "- Production adds SPEC 11.3 step 5 diversification (at least one procedural-rights chunk and one rights summary; both outcomes and "
+            "same-subcategory/recent cases for precedents). It raises recall@5 but lowers MRR, because forced items can take the top slots.",
             "- The rewrite dictionary and RRF weights were adjusted after inspecting misses on this gold set, so these numbers are optimistic; "
             "Phase B should add held-out questions written by a person.",
             "- Precedent questions are answered without metadata filters here; in the product, Research also filters by the treatment category inferred from the service.",
         ]
-        lines += ["", "Phase C will add a fifth row: Azure AI Search hybrid + semantic ranker.", "", "## Misses (production config: hybrid RRF + query rewriting, recall@5 < 1)", ""]
+        lines += ["", "Phase C will add a fifth row: Azure AI Search hybrid + semantic ranker.", "", "## Misses (production config, recall@5 < 1)", ""]
         for p in per_best or []:
             if p["recall@5"] < 1:
                 lines.append(f"- `{p['id']}` {p['query']} — recall@5 {p['recall@5']:.2f}, MRR {p['mrr']:.2f}")
