@@ -36,6 +36,7 @@ dependencies = [
 nlp = [
   "presidio-analyzer>=2.2",
   "sentence-transformers>=3.0",
+  "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
 ]
 
 [dependency-groups]
@@ -84,3 +85,6 @@ ignore = ["E501", "B008"]
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
+
+[tool.hatch.metadata]
+allow-direct-references = true

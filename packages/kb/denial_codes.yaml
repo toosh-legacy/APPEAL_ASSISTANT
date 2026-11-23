@@ -1,0 +1,42 @@
+# Hand-curated, short list of common claim adjustment reason codes (CARC) mapped to our categories.
+# Descriptions are written in our own words; they are NOT the official X12 wording.
+# Official list: https://x12.org/codes/claim-adjustment-reason-codes
+status: needs_human_review
+official_list_url: https://x12.org/codes/claim-adjustment-reason-codes
+codes:
+  - code: CO-50
+    category: medical_necessity
+    description: The payer says the service was not medically necessary under its rules.
+  - code: CO-197
+    category: prior_authorization
+    description: The payer says a required approval (precertification or authorization) was missing.
+  - code: CO-15
+    category: prior_authorization
+    description: The payer says the authorization number was missing or did not match.
+  - code: CO-242
+    category: out_of_network
+    description: The payer says the provider was not in the plan's network.
+  - code: CO-16
+    category: coding_billing_error
+    description: The payer says information on the claim was missing or wrong.
+  - code: CO-4
+    category: coding_billing_error
+    description: The payer says the procedure code and its modifier do not fit together.
+  - code: CO-11
+    category: coding_billing_error
+    description: The payer says the diagnosis does not fit the procedure that was billed.
+  - code: CO-18
+    category: coding_billing_error
+    description: The payer says this is a duplicate of a claim it already processed.
+  - code: CO-55
+    category: experimental_investigational
+    description: The payer says the treatment is experimental or investigational.
+  - code: CO-96
+    category: not_covered_benefit
+    description: The payer says the charge is not covered by the plan.
+  - code: CO-204
+    category: not_covered_benefit
+    description: The payer says this service is not covered under the member's current benefit plan.
+  - code: CO-29
+    category: timely_filing
+    description: The payer says the claim was sent after the filing deadline.

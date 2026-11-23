@@ -1,0 +1,114 @@
+{
+  "datasets": {
+    "ecfr": {
+      "downloaded_at": "2026-11-23T07:23:20+00:00",
+      "rows": 406,
+      "schema_ok": true,
+      "sha256": "cda0e002a5dbbf32693e18c79aa25b4a0e338b1264b2a76efbaaf1c9484d70da",
+      "source": "real",
+      "sources": [
+        {
+          "chunks": 50,
+          "date": "2026-11-19",
+          "paragraphs": 148,
+          "sha256": "934ec76df9e3f537bc20e80e6807c47d6f52aa449c32b70a187c7205033728dd",
+          "source_id": "29cfr2560.503-1",
+          "url": "https://www.ecfr.gov/current/title-29/section-2560.503-1"
+        },
+        {
+          "chunks": 36,
+          "date": "2026-11-19",
+          "paragraphs": 138,
+          "sha256": "2ca53870c0bec2719929e3419980ef1b6f9c70948374abcfc3f9d6dcf4a8b8c3",
+          "source_id": "45cfr147.136",
+          "url": "https://www.ecfr.gov/current/title-45/section-147.136"
+        },
+        {
+          "chunks": 237,
+          "date": "2026-11-19",
+          "paragraphs": 607,
+          "sha256": "94d660b73cac73ec7dd1d57e6eba6b0e40d267848ed1fd9f8f410897e4eabac8",
+          "source_id": "42cfr422.M",
+          "url": "https://www.ecfr.gov/current/title-42/part-422/subpart-M"
+        },
+        {
+          "chunks": 40,
+          "date": "2026-11-19",
+          "paragraphs": 129,
+          "sha256": "c7ff7477e63c1a383658a7b36931a2b0b808d19fa0fea5978a8326b548bb5f50",
+          "source_id": "42cfr438.F",
+          "url": "https://www.ecfr.gov/current/title-42/part-438/subpart-F"
+        },
+        {
+          "chunks": 8,
+          "date": "2026-11-19",
+          "paragraphs": 28,
+          "sha256": "75ce1a3342f9fc12e4ca566297fc6d008c11643c6a8f3040f3f9b126227dd00f",
+          "source_id": "45cfr149.110",
+          "url": "https://www.ecfr.gov/current/title-45/section-149.110"
+        },
+        {
+          "chunks": 6,
+          "date": "2026-11-19",
+          "paragraphs": 9,
+          "sha256": "85f2478dea83e45bd686547c3a6cd3ad670969dfac99846a62482bc76fc162b4",
+          "source_id": "45cfr149.120",
+          "url": "https://www.ecfr.gov/current/title-45/section-149.120"
+        },
+        {
+          "chunks": 4,
+          "date": "2026-11-19",
+          "paragraphs": 9,
+          "sha256": "296dc3cfce9cf0d9543ae796f0ec2daeb0c2509cf32e0cbf632f4df42fb5bae1",
+          "source_id": "45cfr149.130",
+          "url": "https://www.ecfr.gov/current/title-45/section-149.130"
+        },
+        {
+          "chunks": 9,
+          "date": "2026-11-19",
+          "paragraphs": 14,
+          "sha256": "2461b5569c61e0b4eb194838ca84396e10dd0c0b9525aa195d1e4913dbdc8710",
+          "source_id": "45cfr149.410",
+          "url": "https://www.ecfr.gov/current/title-45/section-149.410"
+        },
+        {
+          "chunks": 16,
+          "date": "2026-11-19",
+          "paragraphs": 37,
+          "sha256": "3bf7d14137a6365453fab392ad543e485fb3a746c1f59aba49ac39e8797383ba",
+          "source_id": "45cfr149.420",
+          "url": "https://www.ecfr.gov/current/title-45/section-149.420"
+        }
+      ],
+      "url": "https://www.ecfr.gov/api/versioner/v1/titles.json"
+    },
+    "imr": {
+      "downloaded_at": "2026-11-23T07:22:56+00:00",
+      "exact_duplicates_dropped": 39,
+      "pii_scan": {
+        "hits_by_entity": {
+          "ADDRESS": 7,
+          "CLAIM_NUMBER": 3,
+          "MEMBER_ID": 105,
+          "MRN": 180,
+          "PERSON": 237
+        },
+        "rows_with_hits": 481
+      },
+      "raw_file": "raw/imr/imr_determinations.csv",
+      "rows": 42710,
+      "schema_ok": true,
+      "sha256": "f68951823f6ffc09566cc190d97b2808e0269a069843efe809a3f5f90d4c893b",
+      "size_bytes": 85409358,
+      "source": "real",
+      "url": "https://data.chhs.ca.gov/dataset/b79b3447-4c10-4ae6-84e2-1076f83bb24e/resource/3340c5d7-4054-4d03-90e0-5f44290ed095/download/independent-medical-review-imr-determinations-trends.csv"
+    },
+    "kb_summaries": {
+      "deadline_rules_disabled": [],
+      "rows": 19,
+      "sha256": "705924046418edba89dbbeb74147a7ff98830487ff4e73ec9e5ce44002205fd3",
+      "source": "curated",
+      "status": "needs_human_review"
+    }
+  }
+}

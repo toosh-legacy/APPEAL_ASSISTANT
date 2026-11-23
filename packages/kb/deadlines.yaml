@@ -1,0 +1,71 @@
+# Deadline rules (SPEC D5). Every rule must resolve to a regulation chunk that contains `must_contain`;
+# a rule that does not resolve is disabled and no deadline is shown (hard rule 3).
+# trigger: the date the clock starts. We use the date printed on the denial notice, which is the
+# earliest (most conservative) reading of "receipt of the notice".
+# status: needs_human_review until the developer checks each rule against its paragraph (Phase B).
+status: needs_human_review
+rules:
+  - id: erisa_internal_appeal_180
+    plan_types: [employer_self_funded, employer_fully_insured]
+    kind: internal_appeal
+    label: File an internal appeal with your plan
+    days: 180
+    unit: days
+    trigger: notice_date
+    source_id: 29cfr2560.503-1
+    must_contain: "at least 180 days following receipt of a notification of an adverse benefit determination"
+  - id: individual_internal_appeal_180
+    plan_types: [individual_marketplace]
+    kind: internal_appeal
+    label: File an internal appeal with your insurer
+    days: 180
+    unit: days
+    trigger: notice_date
+    # 45 CFR 147.136(b)(3) applies the ERISA claims rules (including the 180-day window) to individual coverage.
+    source_id: 29cfr2560.503-1
+    also_cites_source: 45cfr147.136
+    also_must_contain: "individual health insurance coverage must comply with all the requirements of the ERISA internal claims and appeals procedures"
+    must_contain: "at least 180 days following receipt of a notification of an adverse benefit determination"
+  - id: ma_reconsideration_60
+    plan_types: [medicare_advantage]
+    kind: internal_appeal
+    label: Ask your Medicare Advantage plan for a reconsideration
+    days: 60
+    unit: calendar_days
+    trigger: notice_date
+    source_id: 42cfr422.M
+    must_contain: "request for reconsideration must be filed within 60 calendar days after receipt of the written organization determination notice"
+  - id: medicaid_mc_appeal_60
+    plan_types: [medicaid_managed_care]
+    kind: internal_appeal
+    label: File an appeal with your Medicaid managed care plan
+    days: 60
+    unit: calendar_days
+    trigger: notice_date
+    source_id: 42cfr438.F
+    must_contain: "60 calendar days from the date on the adverse benefit determination notice"
+
+# Next-level options. These start from a later notice (the final internal decision), so we show them
+# with their cited window but do not compute a date from the original denial.
+next_levels:
+  - id: federal_external_review_4mo
+    plan_types: [employer_self_funded, employer_fully_insured, individual_marketplace]
+    kind: external_review
+    label: Request an independent external review after the final internal decision
+    window_text: within four months after receiving the final internal denial notice
+    source_id: 45cfr147.136
+    must_contain: "within four months after the date of receipt of a notice of an adverse benefit determination or final internal adverse benefit determination"
+  - id: ma_independent_entity
+    plan_types: [medicare_advantage]
+    kind: external_review
+    label: If the plan keeps its denial, your case is sent automatically to an independent outside entity
+    window_text: automatic forwarding by the plan
+    source_id: 42cfr422.M
+    must_contain: "must be reviewed and resolved by an independent, outside entity that contracts with CMS"
+  - id: medicaid_state_fair_hearing
+    plan_types: [medicaid_managed_care]
+    kind: state_fair_hearing
+    label: Request a State fair hearing after the plan's appeal decision
+    window_text: no less than 90 and no more than 120 calendar days from the plan's notice of resolution (your State sets the exact number)
+    source_id: 42cfr438.F
+    must_contain: "no less than 90 calendar days and no more than 120 calendar days"

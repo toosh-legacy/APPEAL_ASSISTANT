@@ -1,0 +1,41 @@
+category: out_of_network
+status: needs_human_review
+label: Out of network
+why: The plan says the provider or facility was not in its network.
+usually_means: The plan may pay less or nothing for out-of-network care. Federal surprise-billing rules can protect you for emergency care and for some care at in-network facilities.
+facts:
+- I received {service} from a provider the plan says is out of network.
+- I ask the plan to review whether federal protections for emergency or out-of-network care apply to this claim.
+legal:
+- id: full_fair_review
+  text: I am asking for a full and fair review of this decision that takes into account all comments, documents, records and other information I submit.
+  needs: full and fair review comments documents records information submitted
+  plan_types: &id001
+  - employer_self_funded
+  - employer_fully_insured
+  - individual_marketplace
+- id: documents_request
+  text: Please send me, free of charge, copies of all documents, records and other information relevant to my claim.
+  needs: free of charge copies documents records information relevant claim
+  plan_types: *id001
+- id: ma_reconsideration
+  text: I am requesting a reconsideration of this organization determination.
+  needs: request reconsideration organization determination
+  plan_types:
+  - medicare_advantage
+- id: medicaid_appeal
+  text: I am filing an appeal of this adverse benefit determination.
+  needs: appeal adverse benefit determination
+  plan_types:
+  - medicaid_managed_care
+- id: nsa_emergency
+  text: Emergency services must be covered without the need for any prior authorization determination, even if the services are provided on an out-of-network basis.
+  needs: emergency services prior authorization determination out-of-network basis
+  plan_types: *id001
+evidence:
+- Proof the care was an emergency, if it was
+- Whether you chose the provider or were assigned one
+- Network directory pages showing the provider, if listed
+- Any consent forms you signed about out-of-network care
+clinician_request: Dear {clinician}, my health plan denied coverage for {service} ({category_label}). I am appealing. Could you please write a letter of medical necessity that explains my diagnosis, the
+  treatments I have tried, why {service} is appropriate for me, and any clinical guidelines or studies that support it? My appeal deadline is {deadline}. Thank you.

@@ -1,0 +1,34 @@
+category: other_unclear
+status: needs_human_review
+label: Other or unclear
+why: The reason for the denial is not clear from the letter.
+usually_means: When a denial is unclear, start by asking the plan for the exact reason and the rule it used.
+facts:
+- I ask the plan to explain the specific reason for denying {service}.
+legal:
+- id: full_fair_review
+  text: I am asking for a full and fair review of this decision that takes into account all comments, documents, records and other information I submit.
+  needs: full and fair review comments documents records information submitted
+  plan_types: &id001
+  - employer_self_funded
+  - employer_fully_insured
+  - individual_marketplace
+- id: documents_request
+  text: Please send me, free of charge, copies of all documents, records and other information relevant to my claim.
+  needs: free of charge copies documents records information relevant claim
+  plan_types: *id001
+- id: ma_reconsideration
+  text: I am requesting a reconsideration of this organization determination.
+  needs: request reconsideration organization determination
+  plan_types:
+  - medicare_advantage
+- id: medicaid_appeal
+  text: I am filing an appeal of this adverse benefit determination.
+  needs: appeal adverse benefit determination
+  plan_types:
+  - medicaid_managed_care
+evidence:
+- The full denial letter and explanation of benefits
+- Notes from any calls with the plan
+clinician_request: Dear {clinician}, my health plan denied coverage for {service} ({category_label}). I am appealing. Could you please write a letter of medical necessity that explains my diagnosis, the
+  treatments I have tried, why {service} is appropriate for me, and any clinical guidelines or studies that support it? My appeal deadline is {deadline}. Thank you.

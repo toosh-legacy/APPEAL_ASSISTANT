@@ -1,0 +1,41 @@
+category: experimental_investigational
+status: needs_human_review
+label: Experimental or investigational
+why: The plan says the treatment is experimental or investigational.
+usually_means: The plan thinks there is not enough evidence that the treatment works for your condition. Published studies and your clinician's explanation can matter a lot.
+facts:
+- My doctor recommended {service} for my condition.
+- My treating clinician will provide published medical evidence supporting {service} for my condition.
+legal:
+- id: full_fair_review
+  text: I am asking for a full and fair review of this decision that takes into account all comments, documents, records and other information I submit.
+  needs: full and fair review comments documents records information submitted
+  plan_types: &id001
+  - employer_self_funded
+  - employer_fully_insured
+  - individual_marketplace
+- id: documents_request
+  text: Please send me, free of charge, copies of all documents, records and other information relevant to my claim.
+  needs: free of charge copies documents records information relevant claim
+  plan_types: *id001
+- id: ma_reconsideration
+  text: I am requesting a reconsideration of this organization determination.
+  needs: request reconsideration organization determination
+  plan_types:
+  - medicare_advantage
+- id: medicaid_appeal
+  text: I am filing an appeal of this adverse benefit determination.
+  needs: appeal adverse benefit determination
+  plan_types:
+  - medicaid_managed_care
+- id: medical_judgment_reviewer
+  text: Because this denial is based on a medical judgment, I ask that the appeal be decided in consultation with a health care professional who has appropriate training and experience in the field of medicine
+    involved.
+  needs: medical judgment health care professional appropriate training experience field medicine
+  plan_types: *id001
+evidence:
+- A letter from your clinician explaining why this treatment fits you
+- Published studies or guidelines supporting the treatment
+- Records showing standard treatments you already tried
+clinician_request: Dear {clinician}, my health plan denied coverage for {service} ({category_label}). I am appealing. Could you please write a letter of medical necessity that explains my diagnosis, the
+  treatments I have tried, why {service} is appropriate for me, and any clinical guidelines or studies that support it? My appeal deadline is {deadline}. Thank you.
