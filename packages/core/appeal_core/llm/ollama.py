@@ -23,6 +23,18 @@ class OllamaNotRunning(RuntimeError):
     pass
 
 
+LIST_FIELDS = {"denial_codes"}
+
+
+def _same_shape(v: Any, field: str) -> bool:
+    """Accept a model value only if it has the field's type: a list of strings for list fields, else a
+    non-empty string. Small models sometimes answer a string field with a list (or the reverse); those
+    values are ignored and the deterministic offline value is kept."""
+    if field in LIST_FIELDS:
+        return isinstance(v, list) and all(isinstance(c, str) for c in v)
+    return isinstance(v, str) and bool(v.strip())
+
+
 class OllamaProvider:
     name = "ollama"
 
@@ -54,8 +66,8 @@ class OllamaProvider:
             try:
                 got = json.loads(self._chat(p["system"], p["user"].format(document=payload["document"])))
                 for k, v in (got.get("fields") or got).items():
-                    if k in base["fields"] and isinstance(v, (str, list)) and v:
-                        base["fields"][k]["value"] = v
+                    if k in base["fields"] and _same_shape(v, k):
+                        base["fields"][k]["value"] = [c.strip() for c in v] if isinstance(v, list) else v.strip()
             except Exception:
                 pass
             return base

@@ -65,3 +65,11 @@ def test_ollama_without_server_gives_clear_error(monkeypatch):
     with pytest.raises(OllamaNotRunning) as e:
         OllamaProvider(host="http://127.0.0.1:9")
     assert "LLM_PROVIDER=offline" in str(e.value)
+
+
+def test_ollama_ignores_values_with_the_wrong_shape():
+    from appeal_core.llm.ollama import _same_shape
+
+    assert _same_shape(["CO-50"], "denial_codes") and not _same_shape("CO-50", "denial_codes")
+    assert _same_shape("MRI", "service") and not _same_shape(["MRI"], "service") and not _same_shape("  ", "service")
+    assert not _same_shape([1, 2], "denial_codes")

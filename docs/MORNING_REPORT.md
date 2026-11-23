@@ -98,17 +98,20 @@ All with reasons in `docs/DECISIONS.md`. The ones to know:
 - Retrieval: OR keyword queries; rewrites feed only the vector side at weight 0.25.
 - Model binaries git-ignored (cards/metrics committed); Playwright uses installed Chrome.
 
-## 7. Top 10 next tasks
-1. **Install WSL2 (Ubuntu) and move the repo into the Linux file system, then add/verify the full-mode adapters and run the test suite there** (Docker Desktop already works on this machine; WSL was not used overnight).
-2. **Review every rights summary and deadline rule** against its cited paragraph and set `status: reviewed` (`packages/kb/`). Nothing public before this.
-3. Lift retrieval recall@5 ≥ 0.85: graded labels, held-out human-written questions, a reranker (Phase C: AI Search semantic ranker row).
-4. Write the ADRs in your own words (`docs/adr/` are skeletons).
-5. Grow gold sets (200 letters, 100 retrieval questions, 50 hand-graded letters) — and write some *real-looking* letters with different layouts to test extraction honestly.
-6. M1: collect consented corrections from the confirm screen as labels; revisit the 0.70 threshold (gold accuracy when answered is 88.9%, not 95%).
-7. M2: re-run the shortcut ablation on case-summary sentences only; decide whether M2 is useful for precedent pools.
-8. Optional Ollama provider (`LLM_PROVIDER=ollama`) and the offline-vs-LLM eval table.
-9. Turn on ESLint/Prettier/Vitest and mypy strict in CI; run CI once on GitHub (`--ci` data mode).
-10. Before the first push: remove the 57 MB parquet from history (squash the overnight commits), then fix the 87 mypy Optional-narrowing findings and make mypy blocking.
+## 7. Top 10 next tasks (updated in Phase B, 2026-11-23)
+Done in Phase B: retrieval gate (dev 0.855; held-out 0.707, sealed 0.755), 200 gold letters incl. an unseen EOB layout, plain-language copy pass, mobile pass with automated checks, mypy 85 → 0 and blocking, ESLint/Prettier/Vitest in CI, CI running on GitHub, 57 MB parquet removed from history, Ollama installed and compared (`evals/reports/provider_comparison.md`).
+
+Still open:
+1. **Review every rights summary and deadline rule** against its cited paragraph and set `status: reviewed` (`packages/kb/`). Nothing public before this. The Medicare Advantage (grade 11.5) and surprise-billing (14.8) summaries also need plainer wording (`evals/reports/readability.md`).
+2. **Write 30+ retrieval questions yourself** and make them the gate; rules questions on unseen text are the weak spot (≈0.60).
+3. **Write the ADRs in your own words** (`docs/adr/` are skeletons).
+4. **Hand-grade 50 letters** to calibrate an LLM judge later; collect some real (consented, de-identified) letter layouts to test extraction honestly — both synthetic families now score 100% because their rules were written by the same author.
+5. **Record the 2-minute demo video** for the README.
+6. M1: gold accuracy when answered is below the 95% target; collect consented corrections from the confirm screen as labels; revisit the 0.70 threshold. Weakest classes: prior authorization (0.60) and timely filing (0.60).
+7. Reranker latency: median case 5.9 s on CPU; consider top-20 candidates or a GPU / Azure semantic ranker (Phase C).
+8. Tighten the 33 loose `any` types in the web pages (ESLint warnings).
+9. Optional: WSL2 + Linux file system for faster local runs.
+10. M2: re-run the shortcut ablation on case-summary sentences only.
 
 ## 8. Things you must review personally
 - `packages/kb/summaries/*.md` — six plain-language rights summaries (all `needs_human_review`).
