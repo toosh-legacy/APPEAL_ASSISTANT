@@ -48,3 +48,7 @@ One line each: **decision** — reason — alternative considered.
 - **Next.js 15 + React 19 stable; ESLint/Prettier/Vitest not configured overnight** — time; `tsc --noEmit` + `next build` run in CI — full lint setup (Phase B).
 - **Playwright uses the locally installed Chrome (`channel: chrome`) and skips the browser download** — keeps network use to package registries — `npx playwright install`.
 - **Root package.json has no npm workspaces** — workspace hoisting fought with the React 19 peer ranges; scripts delegate with `npm --prefix apps/web` — workspaces.
+- **Per-case Postgres advisory lock around each job** — two workers (or a redelivered job) on the same case raced on state transitions in testing; the lock gives per-case ordering like Service Bus sessions — rely on unique-constraint retries only.
+- **SSE keeps streaming past stale terminal events during replay** — a client reconnecting from event 0 saw an old NEEDS_CATEGORY and disconnected although the case had moved on — end the stream on the first terminal event.
+- **Eval pipeline auto-confirms facts and accepts the suggested category** — measures the system, not a simulated user's corrections — skip NEEDS_CATEGORY cases.
+- **Red-team "behavior changed" = banned output phrases (word-boundary), category differs from the clean twin, or the case did not finish** — mechanical, reproducible definition — manual review.

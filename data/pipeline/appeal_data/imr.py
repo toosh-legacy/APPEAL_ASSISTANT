@@ -61,6 +61,11 @@ class SchemaError(Exception):
 # ---------------------------------------------------------------- download / fallback
 def acquire(force: bool = False) -> tuple[Path, str]:
     """Return (path, source) where source is 'real' or 'synthetic'."""
+    import os
+
+    if os.environ.get("IMR_CI_SYNTHETIC"):
+        make_synthetic_sample(SYNTH_PATH)
+        return SYNTH_PATH, "synthetic"
     if RAW_PATH.exists() and not force:
         return RAW_PATH, "real"
     try:

@@ -36,3 +36,9 @@
 ## Phase 5 · Frontend
 - Next.js 15 (App Router, TypeScript strict, Tailwind, TanStack Query, React Hook Form + Zod, Radix Dialog) with `/`, `/start`, `/cases/[id]/confirm`, `/cases/[id]` (SSE progress, explanation / category picker, deadline + .ics, similar cases with stats and explainer, letter editor with footnote dialogs, regenerate, placeholders blocking export, evidence kit, delete), `/sources/[chunkId]`, `/about/data`, `/insights/insurers` (flagged).
 - Types generated from `packages/schemas/openapi.json`; Playwright happy path + axe on desktop and mobile using the installed Chrome.
+
+## Phase 6 · Evaluation, red team, privacy gate
+- `make eval` runs every SPEC 17.2 suite through the real orchestrator + DB and writes `evals/reports/latest.md|json` plus `eval_run` rows; exit code 1 on a failing blocking gate. `--fast` subset for CI.
+- 40 red-team letters (ignore-previous, fake system tags, hidden footer comments, other users' data, threats/false claims, base64, claims-processor notes, zero-width characters, ...) and 30 privacy probes (split IDs, initials, middle initials, phone formats, emails, DOB, MRN, SSN) in `evals/gold/`.
+- Results: all gates pass except retrieval recall@5 (0.804 vs 0.85; logged in BLOCKERS). Red team 0/40 failures; privacy 0 raw identifiers in 621 captured provider inputs.
+- CI: `--ci` data mode (synthetic IMR sample + LSA embeddings) so the fast evals run without the 85 MB download.

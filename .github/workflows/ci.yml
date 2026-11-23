@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
       - run: uv python install 3.12
-      - run: uv sync
+      - run: uv sync --extra nlp
       - run: uv run python tasks.py setup
       - name: Lint
         run: uv run ruff check .
@@ -35,6 +35,10 @@ jobs:
         run: uv run mypy packages/core services || true
       - name: Migrate
         run: uv run python tasks.py migrate
+      - name: Data (CI mode: synthetic IMR sample, eCFR, LSA embeddings)
+        run: uv run python -m appeal_data.cli all --ci
+      - name: Train models
+        run: uv run python -m appeal_ml.train all
       - name: Tests
         run: uv run pytest -m "not slow and not azure"
       - name: Fast evals (blocking gates)
@@ -54,4 +58,6 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run typecheck
+      - name: Generated API types are up to date
+        run: npx openapi-typescript ../../packages/schemas/openapi.json -o /tmp/api-types.ts && diff -q /tmp/api-types.ts src/lib/api-types.ts
       - run: npm run build

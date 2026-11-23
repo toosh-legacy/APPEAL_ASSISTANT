@@ -131,9 +131,8 @@ class Orchestrator:
 
     # ------------------------------------------------------------------ job entry
     def handle(self, topic: str, case_id: str) -> None:
-        from sqlalchemy import text
-
         from appeal_core.db import get_engine
+        from sqlalchemy import text
 
         key = int(hashlib.sha256(case_id.encode()).hexdigest()[:15], 16)
         with get_engine(self.url).connect() as lock_conn:

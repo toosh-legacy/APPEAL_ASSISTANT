@@ -16,7 +16,13 @@ def main() -> None:
     ap.add_argument("step", choices=["all", "imr", "ecfr", "kb", "synth", "insurers", "embed"])
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--no-db", action="store_true")
+    ap.add_argument("--ci", action="store_true", help="CI mode: synthetic IMR sample (no 85 MB download) + LSA embeddings")
     a = ap.parse_args()
+    if a.ci:
+        import os
+
+        os.environ["IMR_CI_SYNTHETIC"] = "1"
+        os.environ["EMBEDDER"] = "lsa"
     load_db = not a.no_db
     t0 = time.time()
     results = {}
