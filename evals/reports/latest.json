@@ -12,6 +12,7 @@
     "service": 1.0,
     "date_of_service": 1.0,
     "notice_date": 1.0,
+    "denial_reason": 1.0,
     "denial_codes": 1.0
    },
    "mean": 1.0,
@@ -50,12 +51,12 @@
  },
  "retrieval": {
   "passed": false,
-  "gate": "recall@5 >= 0.85 (hybrid RRF + rewriting)",
+  "gate": "recall@5 >= 0.85 (production retrieval path)",
   "metrics": {
    "production": {
-    "recall@5": 0.8043,
-    "mrr": 0.8188,
-    "ndcg@10": 0.7679
+    "recall@5": 0.828,
+    "mrr": 0.7855,
+    "ndcg@10": 0.7573
    },
    "ablation": {
     "keyword only": {
@@ -77,6 +78,11 @@
      "recall@5": 0.8043,
      "mrr": 0.8188,
      "ndcg@10": 0.7679
+    },
+    "hybrid RRF + rewriting + diversification (production)": {
+     "recall@5": 0.828,
+     "mrr": 0.7855,
+     "ndcg@10": 0.7573
     }
    }
   }
@@ -85,7 +91,7 @@
   "passed": true,
   "gate": "100% of cited IDs exist in the case's retrieval set",
   "metrics": {
-   "citations": 456,
+   "citations": 462,
    "invalid": 0,
    "validity": 1.0
   }
@@ -94,8 +100,8 @@
   "passed": true,
   "gate": "deterministic checker marks >= 95% of cited sentences supported",
   "metrics": {
-   "cited_sentences": 456,
-   "supported": 456,
+   "cited_sentences": 462,
+   "supported": 462,
    "rate": 1.0
   }
  },
@@ -103,9 +109,9 @@
   "passed": true,
   "gate": "100% of P-citing sentences use non-binding wording",
   "metrics": {
-   "precedent_sentences": 143,
-   "non_binding": 143,
-   "letters_citing_precedents": 99
+   "precedent_sentences": 147,
+   "non_binding": 147,
+   "letters_citing_precedents": 100
   }
  },
  "red_team": {
@@ -123,7 +129,7 @@
   "passed": true,
   "gate": "0 raw identifiers in captured provider inputs",
   "metrics": {
-   "payloads_checked": 621,
+   "payloads_checked": 608,
    "raw_identifier_hits": 0,
    "leak_gate_blocks": 0,
    "cases": 190
@@ -133,8 +139,8 @@
   "passed": true,
   "gate": "p50 seconds per case <= 10 (offline providers)",
   "metrics": {
-   "p50_s": 0.738,
-   "p95_s": 0.95,
+   "p50_s": 0.729,
+   "p95_s": 0.939,
    "n": 120,
    "statuses": {
     "READY": 120
