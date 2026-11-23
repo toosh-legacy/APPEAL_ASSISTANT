@@ -130,7 +130,7 @@ class Orchestrator:
         return dk, TokenMap.from_json(decrypt(dk, v.encrypted_map, "tokenmap"))
 
     # ------------------------------------------------------------------ job entry
-    def handle(self, topic: str, case_id: str) -> None:
+    def handle(self, topic: str, case_id: str, carrier: dict | None = None) -> None:
         from appeal_core.db import get_engine
         from sqlalchemy import text
 
@@ -139,7 +139,7 @@ class Orchestrator:
             if not lock_conn.execute(text("SELECT pg_try_advisory_lock(:k)"), {"k": key}).scalar():
                 raise CaseBusy(case_id)
             try:
-                with span("job", topic=topic, case_id=case_id):
+                with span(f"job.{topic}", carrier=carrier, topic=topic, case_id=case_id):
                     if topic == "case.ingest":
                         self.ingest(case_id)
                     elif topic == "case.draft":
@@ -358,7 +358,7 @@ def run_worker(stop_after_idle: float | None = None, worker_id: str = "worker-1"
             continue
         idle = 0.0
         try:
-            orch.handle(job.topic, job.case_id)
+            orch.handle(job.topic, job.case_id, (job.payload or {}).get("trace"))
             q.complete(job.id)
         except Exception as e:
             outcome = q.fail(job.id, f"{type(e).__name__}: {e}", settings.job_max_attempts)

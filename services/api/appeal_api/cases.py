@@ -157,7 +157,11 @@ def create_case(body: CreateCase, request: Request, response: Response, idempote
         doc = Document(case_id=case.id, kind=body.blob_name.rsplit(".", 1)[-1], blob_uri=f"uploads/{body.blob_name}", sha256=hashlib.sha256(data).hexdigest())
     db.add(doc)
     db.add(TokenVault(case_id=case.id, wrapped_data_key=wrapped, encrypted_map=encrypt(dk, "{}", "tokenmap")))
-    get_queue().enqueue(db, "case.ingest", {"case_id": case.id}, case_id=case.id)  # transactional outbox
+    from appeal_core.telemetry import span, trace_carrier
+
+    with span("api.create_case", case_id=case.id):
+        carrier = trace_carrier()
+    get_queue().enqueue(db, "case.ingest", {"case_id": case.id, "trace": carrier}, case_id=case.id)  # transactional outbox
     db.add(AuditEvent(actor="user", action="case.create", entity=f"case:{case.id}"))
     db.commit()
     return CaseCreated(id=case.id, status=case.status, access_token=case_token(case.id))
@@ -317,7 +321,11 @@ def confirm_extraction(body: Corrections, case_id: str = Depends(require_case_ac
         raise Problem(412, "Case changed", "This case was updated elsewhere. Reload and try again.")
     if corr:
         db.add(AuditEvent(actor="user", action="extraction.corrected(labeled_example)", entity=f"case:{case_id}"))
-    get_queue().enqueue(db, "case.draft", {"case_id": case_id}, case_id=case_id)
+    from appeal_core.telemetry import span, trace_carrier
+
+    with span("api.confirm_extraction", case_id=case_id):
+        carrier = trace_carrier()
+    get_queue().enqueue(db, "case.draft", {"case_id": case_id, "trace": carrier}, case_id=case_id)
     db.commit()
     get_progress_bus().publish(case_id, {"type": "status", "status": Status.CLASSIFYING.value})
     return {"status": c.status, "version": c.version}

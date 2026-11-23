@@ -275,3 +275,68 @@ def test_readyz(client):
     r = client.get("/readyz")
     assert r.status_code == 200 and r.json()["checks"] == {"db": True, "redis": True, "blob": True}
     assert "X-Correlation-ID" in r.headers
+
+
+def test_retention_purges_expired_uploads_and_cases(client):
+    from datetime import UTC, datetime, timedelta
+
+    from appeal_core.db import session_scope
+    from appeal_core.models import Case, Document, TokenVault
+    from appeal_worker.retention import purge
+
+    cid, H = create(client, _gold(11)["text"])
+    drain()
+    with session_scope() as s:
+        doc = s.scalar(select(Document).where(Document.case_id == cid))
+        doc.retention_until = datetime.now(UTC) - timedelta(minutes=1)
+    out = purge()
+    assert out["documents_purged"] >= 1
+    with session_scope() as s:
+        doc = s.scalar(select(Document).where(Document.case_id == cid))
+        assert doc.text_encrypted is None and doc.retention_until is None
+        s.get(Case, cid).expires_at = datetime.now(UTC) - timedelta(minutes=1)
+    out = purge()
+    assert out["cases_deleted"] >= 1
+    with session_scope() as s:
+        assert s.get(Case, cid) is None and s.get(TokenVault, cid) is None
+
+
+def test_text_pdf_upload_is_parsed(client):
+    import io
+
+    import httpx
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+
+    g = _gold(12)
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    y = 750
+    for line in g["text"].split("\n"):
+        c.drawString(40, y, line)
+        y -= 14
+    c.save()
+    data = buf.getvalue()
+    r = client.post("/v1/uploads", json={"filename": "letter.pdf", "content_type": "application/pdf", "size": len(data)})
+    assert r.status_code == 200
+    put = httpx.put(r.json()["upload_url"], content=data, headers={"x-ms-blob-type": "BlockBlob"})
+    assert put.status_code in (200, 201)
+    created = client.post("/v1/cases", json={"blob_name": r.json()["blob_name"]}, headers={"Idempotency-Key": uuid.uuid4().hex}).json()
+    drain()
+    H = {"Authorization": f"Bearer {created['access_token']}"}
+    d = client.get(f"/v1/cases/{created['id']}", headers=H).json()
+    assert d["status"] == "AWAITING_CONFIRMATION", d
+    assert d["extraction"]["fields"]["service"]["value"] == g["label"]["fields"]["service"]
+
+
+def test_admin_metrics_and_auth(client):
+    from appeal_core.settings import get_settings
+
+    assert client.get("/admin/v1/metrics").status_code == 401
+    r = client.get("/admin/v1/metrics", headers={"X-Admin-Token": get_settings().admin_token})
+    assert r.status_code == 200, r.text
+    m = r.json()
+    assert "writer" in m["latency_ms_p50_by_agent"] and 0 <= m["classifier_ask_user_rate"] <= 1
+    t = client.get("/admin/v1/traces?limit=2", headers={"X-Admin-Token": get_settings().admin_token}).json()
+    for c in t["cases"]:
+        assert "ZZTEST" not in (c["redacted_input"] or "")

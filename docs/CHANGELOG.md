@@ -52,3 +52,9 @@
 - D3: CMS Transparency in Coverage PUF (2027 release, plan-year 2025 data) → `insurer_stats` (136 individual-Marketplace issuers); F9 `/insights/insurers` enabled with CMS's own disclaimer; exact-name insurer line on the explanation card.
 - Admin page (`/admin`): eval runs, data-refresh status, redacted case traces with per-agent latency, prompt versions and tokens.
 - Playwright: 8 tests (desktop + mobile) incl. axe on insights and admin pages.
+
+## Hardening (after the first morning report)
+- Retention purge (`make retention`): expired uploads lose blob + stored text; expired cases are deleted (vault key destroyed). Tested.
+- One trace per case: W3C trace context is stored in the job payload by the API and continued by the worker (`job.*` → `agent.*` spans). Tested.
+- `/admin/v1/metrics`: p50 latency per agent, revisions per case, NEEDS_HUMAN rate, ask-user rate, leak-gate blocks, injection detections, cost per case.
+- Hypothesis property tests for deadline math and .ics; text-PDF upload path test (SAS PUT → Azurite → pypdf → intake).

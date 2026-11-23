@@ -1,6 +1,6 @@
 """Cross-platform task runner. The Makefile delegates here so Windows (no WSL) and Linux behave the same.
 
-Usage: uv run python tasks.py <setup|up|down|migrate|data|train|evaluate-models|eval|eval-fast|test|test-fast|demo|lint|obs|api|worker>
+Usage: uv run python tasks.py <setup|up|down|migrate|data|train|evaluate-models|eval|eval-fast|test|test-fast|demo|lint|obs|api|worker|retention>
 """
 
 from __future__ import annotations
@@ -139,6 +139,10 @@ def demo() -> None:
             p.terminate()
 
 
+def retention() -> None:
+    run([PY, "-m", "appeal_worker.retention"])
+
+
 def obs() -> None:
     run(["docker", "compose", "--profile", "obs", "up", "-d", "jaeger"])
 
@@ -158,6 +162,7 @@ TASKS = {
     "lint": lint,
     "demo": demo,
     "obs": obs,
+    "retention": retention,
     "api": api,
     "worker": worker,
 }

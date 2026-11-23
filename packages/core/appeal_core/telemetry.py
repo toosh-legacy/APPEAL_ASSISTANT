@@ -105,10 +105,25 @@ def _trace_path() -> str:
     return str(p / "traces.jsonl")
 
 
+def trace_carrier() -> dict[str, str]:
+    """W3C trace context of the current span, to store in a job payload (API -> queue -> worker)."""
+    from opentelemetry.propagate import inject
+
+    _get_tracer()
+    carrier: dict[str, str] = {}
+    inject(carrier)
+    return carrier
+
+
 @contextmanager
-def span(name: str, **attrs: Any):
+def span(name: str, carrier: dict[str, str] | None = None, **attrs: Any):
     tracer = _get_tracer()
-    with tracer.start_as_current_span(name) as sp:
+    ctx = None
+    if carrier:
+        from opentelemetry.propagate import extract
+
+        ctx = extract(carrier)
+    with tracer.start_as_current_span(name, context=ctx) as sp:
         for k, v in scrub(attrs).items():
             if v is not None:
                 sp.set_attribute(k, v if isinstance(v, (str, int, float, bool)) else str(v))

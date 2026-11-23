@@ -1,7 +1,7 @@
 # All targets delegate to tasks.py so the same commands work on Windows (no WSL) and Linux.
 RUN := uv run python tasks.py
 
-.PHONY: setup up down migrate data train evaluate-models eval eval-fast test test-fast demo lint obs api worker
+.PHONY: setup up down migrate data train evaluate-models eval eval-fast test test-fast demo lint obs api worker retention
 
 setup:
 	uv sync --extra nlp
@@ -36,3 +36,5 @@ api:
 	$(RUN) api
 worker:
 	$(RUN) worker
+retention:
+	$(RUN) retention

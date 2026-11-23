@@ -66,3 +66,30 @@ def datasets(db: Session = Depends(get_db)) -> dict:
         "manifest": m["datasets"],
         "loaded": [{"name": r.name, "rows": r.rows, "sha256": r.sha256, "downloaded_at": r.downloaded_at, "schema_ok": r.schema_ok, "source": r.source} for r in rows],
     }
+
+
+@router.get("/metrics")
+def metrics(db: Session = Depends(get_db)) -> dict:
+    """SPEC 16 metrics computed from the audit trail (Application Insights in Phase C)."""
+    from appeal_core.llm.base import CALL_LOG
+    from appeal_core.privacy.leak_gate import blocks_count
+    from sqlalchemy import func, text
+
+    lat = dict(db.execute(select(AgentRun.agent, func.percentile_cont(0.5).within_group(AgentRun.latency_ms)).group_by(AgentRun.agent)).all())
+    writer_runs = db.execute(text("SELECT case_id, count(*) FROM agent_run WHERE agent='writer' GROUP BY case_id")).all()
+    total_cases = db.scalar(select(func.count()).select_from(Case)) or 0
+    by_status = dict(db.execute(select(Case.status, func.count()).group_by(Case.status)).all())
+    cls = db.execute(text("SELECT count(*) FILTER (WHERE (output->>'needs_user')::boolean), count(*) FROM agent_run WHERE agent='classifier'")).one()
+    inj = db.scalar(text("SELECT count(*) FROM extraction WHERE jsonb_array_length(coalesce(injection->'flags','[]'::jsonb)) > 0"))
+    cost = db.scalar(text("SELECT coalesce(avg(s), 0) FROM (SELECT sum(cost_usd) s FROM agent_run GROUP BY case_id) t"))
+    return {
+        "latency_ms_p50_by_agent": {k: float(v) for k, v in lat.items()},
+        "revisions_per_case_avg": (sum(n for _, n in writer_runs) / len(writer_runs) - 1) if writer_runs else 0.0,
+        "needs_human_rate": by_status.get("NEEDS_HUMAN", 0) / total_cases if total_cases else 0.0,
+        "classifier_ask_user_rate": (cls[0] / cls[1]) if cls[1] else 0.0,
+        "leak_gate_blocks_this_process": blocks_count(),
+        "injection_detections": int(inj or 0),
+        "cost_usd_per_case_avg": float(cost or 0.0),
+        "provider_calls_this_process": len(CALL_LOG.records),
+        "cases_by_status": by_status,
+    }
