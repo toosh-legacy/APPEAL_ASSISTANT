@@ -1,8 +1,8 @@
 category: experimental_investigational
 status: needs_human_review
 label: Experimental or investigational
-why: The plan says the treatment is experimental or investigational.
-usually_means: The plan thinks there is not enough evidence that the treatment works for your condition. Published studies and your clinician's explanation can matter a lot.
+why: The plan says the treatment is still being tested (experimental or investigational).
+usually_means: The plan thinks there is not enough proof that the treatment works for your condition. Published studies and a letter from your doctor can matter a lot.
 facts:
 - My doctor recommended {service} for my condition.
 - My treating clinician will provide published medical evidence supporting {service} for my condition.

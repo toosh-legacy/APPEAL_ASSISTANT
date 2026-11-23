@@ -2,7 +2,7 @@ category: out_of_network
 status: needs_human_review
 label: Out of network
 why: The plan says the provider or facility was not in its network.
-usually_means: The plan may pay less or nothing for out-of-network care. Federal surprise-billing rules can protect you for emergency care and for some care at in-network facilities.
+usually_means: The plan may pay less, or nothing, when a provider is out of network. Federal surprise-billing rules can protect you for emergency care and for some care at in-network hospitals and clinics.
 facts:
 - I received {service} from a provider the plan says is out of network.
 - I ask the plan to review whether federal protections for emergency or out-of-network care apply to this claim.

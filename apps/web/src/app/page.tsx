@@ -36,13 +36,13 @@ export default function Home() {
       <section className="card" aria-labelledby="sources">
         <h2 id="sources" className="text-xl font-bold">Where the information comes from</h2>
         <ul className="mt-2 list-disc space-y-1 pl-6">
-          <li>Federal regulations from the official eCFR (public domain).</li>
+          <li>Federal rules from the official eCFR website (free to use).</li>
           <li>
-            Real independent medical review decisions from the California Department of Managed Health Care (CC BY).
+            Real decisions from outside doctors who reviewed denials, from the California Department of Managed Health Care (CC BY).
           </li>
         </ul>
         <p className="mt-2">
-          Latest quality checks are published in the project&apos;s evaluation report. <Link href="/about/data">Learn more about the data</Link>.
+          We publish our latest test results in the evaluation report. <Link href="/about/data">Learn more about the data</Link>.
         </p>
       </section>
     </div>

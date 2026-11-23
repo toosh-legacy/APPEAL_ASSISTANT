@@ -2,7 +2,7 @@ category: prior_authorization
 status: needs_human_review
 label: Prior authorization
 why: The plan says approval was needed before the service and it was not obtained.
-usually_means: Many plans require approval before certain services. Sometimes the approval was requested but not recorded, or the service was urgent.
+usually_means: Many plans must say yes to some services before you get them. Sometimes the request was sent but not recorded, or the care was urgent.
 facts:
 - I ask the plan to review whether prior authorization was required for {service} and whether it was requested.
 - If prior authorization was required, I ask the plan to review the medical need for {service} now.

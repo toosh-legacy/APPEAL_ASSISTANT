@@ -24,13 +24,13 @@ export default function AboutData() {
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">Plain-language summaries</h2>
         <p>
-          Our rights summaries are written from the regulations above and marked as draft until a person reviews them against the cited paragraphs.
+          We wrote our rights summaries from the rules above. They stay marked as drafts until a person checks each one against the rule it cites.
         </p>
       </section>
       <section className="card space-y-2">
         <h2 className="text-lg font-bold">Limitations</h2>
         <ul className="list-disc space-y-1 pl-6">
-          <li>Our denial-category model is trained on synthetic letters. Real letters vary; always check the category and facts.</li>
+          <li>Our tool that sorts denials learned from made-up practice letters. Real letters vary, so always check the category and the facts.</li>
           <li>Deadlines are counted from the date on your letter and are only shown when we have a cited rule for your plan type.</li>
           <li>This is not legal or medical advice. You are the author of your appeal.</li>
         </ul>

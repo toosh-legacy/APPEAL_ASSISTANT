@@ -50,8 +50,8 @@ nsa = {
 books = {
     "medical_necessity": dict(
         label="Medical necessity",
-        why="The plan says the service was not medically necessary for your condition.",
-        usually_means="The plan's reviewer did not think the records showed you needed this service, or thought a different option should come first. These denials are often about missing or incomplete medical records.",
+        why="The plan says this service was not medically necessary (not needed) for your condition.",
+        usually_means="The plan's reviewer thinks your records do not show that you need this service, or thinks you should try another option first. These denials are often about missing medical records.",
         facts=["My doctor recommended {service} to treat my condition.", "My treating clinician will provide a letter explaining why {service} is medically necessary for me."],
         legal=[med_judgment],
         evidence=["A letter of medical necessity from your treating clinician", "Office notes and test results that show your symptoms and history", "Records of treatments you already tried and how they worked", "Any clinical guidelines your clinician relies on"],
@@ -59,7 +59,7 @@ books = {
     "prior_authorization": dict(
         label="Prior authorization",
         why="The plan says approval was needed before the service and it was not obtained.",
-        usually_means="Many plans require approval before certain services. Sometimes the approval was requested but not recorded, or the service was urgent.",
+        usually_means="Many plans must say yes to some services before you get them. Sometimes the request was sent but not recorded, or the care was urgent.",
         facts=["I ask the plan to review whether prior authorization was required for {service} and whether it was requested.", "If prior authorization was required, I ask the plan to review the medical need for {service} now."],
         legal=[med_judgment],
         evidence=["Any authorization or reference numbers from your provider's office", "Dates and names from calls about the authorization", "Records showing whether the care was urgent", "A letter from your clinician about why the service was needed"],
@@ -67,7 +67,7 @@ books = {
     "out_of_network": dict(
         label="Out of network",
         why="The plan says the provider or facility was not in its network.",
-        usually_means="The plan may pay less or nothing for out-of-network care. Federal surprise-billing rules can protect you for emergency care and for some care at in-network facilities.",
+        usually_means="The plan may pay less, or nothing, when a provider is out of network. Federal surprise-billing rules can protect you for emergency care and for some care at in-network hospitals and clinics.",
         facts=["I received {service} from a provider the plan says is out of network.", "I ask the plan to review whether federal protections for emergency or out-of-network care apply to this claim."],
         legal=[nsa],
         evidence=["Proof the care was an emergency, if it was", "Whether you chose the provider or were assigned one", "Network directory pages showing the provider, if listed", "Any consent forms you signed about out-of-network care"],
@@ -82,8 +82,8 @@ books = {
     ),
     "experimental_investigational": dict(
         label="Experimental or investigational",
-        why="The plan says the treatment is experimental or investigational.",
-        usually_means="The plan thinks there is not enough evidence that the treatment works for your condition. Published studies and your clinician's explanation can matter a lot.",
+        why="The plan says the treatment is still being tested (experimental or investigational).",
+        usually_means="The plan thinks there is not enough proof that the treatment works for your condition. Published studies and a letter from your doctor can matter a lot.",
         facts=["My doctor recommended {service} for my condition.", "My treating clinician will provide published medical evidence supporting {service} for my condition."],
         legal=[med_judgment],
         evidence=["A letter from your clinician explaining why this treatment fits you", "Published studies or guidelines supporting the treatment", "Records showing standard treatments you already tried"],

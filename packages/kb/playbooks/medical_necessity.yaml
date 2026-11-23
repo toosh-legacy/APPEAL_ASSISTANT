@@ -1,9 +1,8 @@
 category: medical_necessity
 status: needs_human_review
 label: Medical necessity
-why: The plan says the service was not medically necessary for your condition.
-usually_means: The plan's reviewer did not think the records showed you needed this service, or thought a different option should come first. These denials are often about missing or incomplete medical
-  records.
+why: The plan says this service was not medically necessary (not needed) for your condition.
+usually_means: The plan's reviewer thinks your records do not show that you need this service, or thinks you should try another option first. These denials are often about missing medical records.
 facts:
 - My doctor recommended {service} to treat my condition.
 - My treating clinician will provide a letter explaining why {service} is medically necessary for me.

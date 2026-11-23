@@ -298,7 +298,7 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold">Your appeal</h1>
-      {c.degraded && <p className="rounded-lg bg-amber-50 p-3">This letter was made with our basic template because a service was unavailable.</p>}
+      {c.degraded && <p className="rounded-lg bg-amber-50 p-3">A part of our system was down, so we used our basic letter template.</p>}
       <Progress id={id} status={c.status} />
 
       {cls && (
