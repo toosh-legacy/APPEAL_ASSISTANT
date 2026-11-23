@@ -41,7 +41,13 @@ def check_payload(payload: Any, raw_values: list[str]) -> None:
     for raw in raw_values:
         if not raw or len(raw.strip()) < 3:
             continue
-        if raw.lower() in lowered or (len(_canon(raw)) >= 6 and _canon(raw) in canon):
+        r = raw.strip().lower()
+        if len(r) < 8:
+            # short values (ZIP codes, short IDs) must match as whole tokens: "00000" must not match "SYN00000"
+            hit = re.search(rf"(?<![0-9a-z]){re.escape(r)}(?![0-9a-z])", lowered) is not None
+        else:
+            hit = r in lowered or (len(_canon(raw)) >= 8 and _canon(raw) in canon)
+        if hit:
             _blocks["count"] += 1
             raise LeakBlocked("known raw identifier present")
     for sp in regex_detect(text):

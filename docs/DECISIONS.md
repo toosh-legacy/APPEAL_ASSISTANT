@@ -55,3 +55,4 @@ One line each: **decision** — reason — alternative considered.
 - **D3 uses the newest PUF (2027 release, plan-year 2025 data), individual-market QHP sheet, issuer level; denials = in-network + out-of-network** — SPEC asks for issuer-level claims/denials/appeals; SHOP and dental sheets skipped — plan-level rows.
 - **Insurer insights flag turned on (`FEATURE_INSURER_INSIGHTS=true`) because D3 loaded** — SPEC fallback hides it only when D3 fails — keep hidden.
 - **`data/processed/imr.parquet` untracked after the fact (it was committed in phase 1, 57 MB)** — reproducible with `make data`; big binaries do not belong in git. History was NOT rewritten (destructive); squash or `git filter-repo` it before the first push — rewrite history overnight.
+- **Leak gate matches short raw values (< 8 chars) as whole tokens only** — found by the CI simulation: ZIP '00000' falsely matched 'SYN00000' and blocked the writer — substring matching for all values.
