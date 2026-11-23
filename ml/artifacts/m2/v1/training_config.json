@@ -1,0 +1,19 @@
+{
+  "data_hashes": {
+    "imr.parquet": "0d59a9b4fce1c86ffbc604e381e1889b6cc182eaba592c3b895396a453966e9d"
+  },
+  "git_sha": "e25f2e66eb665c8b55e78dd2bb3f20c360530e5b",
+  "seed": 20251123,
+  "serving_variant": "tfidf_lr_shortcuts_removed",
+  "split": {
+    "excluded_partial_years": [
+      2026
+    ],
+    "test_years": [
+      2024,
+      2025
+    ],
+    "train_years": "2001-2022",
+    "validation_year": 2023
+  }
+}

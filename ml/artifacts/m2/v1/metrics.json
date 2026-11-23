@@ -1,0 +1,86 @@
+{
+  "baseline_majority": {
+    "macro_f1": 0.3072607260726073,
+    "per_class_recall": {
+      "Experimental/Investigational": 0.0,
+      "Medical Necessity": 1.0,
+      "Urgent Care": 0.0
+    }
+  },
+  "embeddings_lr": {
+    "note": "MiniLM embeddings of the first precedent chunk (shortcut phrases NOT removed)",
+    "test": {
+      "macro_f1": 0.7195821309903451,
+      "per_class_recall": {
+        "Experimental/Investigational": 0.8604651162790697,
+        "Medical Necessity": 0.8865735767991407,
+        "Urgent Care": 0.9375
+      }
+    },
+    "validation": {
+      "macro_f1": 0.671702545657476,
+      "per_class_recall": {
+        "Experimental/Investigational": 0.8004201680672269,
+        "Medical Necessity": 0.8594900849858357,
+        "Urgent Care": 0.8
+      }
+    }
+  },
+  "labels": [
+    "Experimental/Investigational",
+    "Medical Necessity",
+    "Urgent Care"
+  ],
+  "sizes": {
+    "test": 5445,
+    "train": 34481,
+    "validation": 2246
+  },
+  "split": {
+    "excluded_partial_years": [
+      2026
+    ],
+    "test_years": [
+      2024,
+      2025
+    ],
+    "train_years": "2001-2022",
+    "validation_year": 2023
+  },
+  "tfidf_lr": {
+    "test": {
+      "macro_f1": 0.9649081341030282,
+      "per_class_recall": {
+        "Experimental/Investigational": 1.0,
+        "Medical Necessity": 0.9995703544575725,
+        "Urgent Care": 0.8125
+      }
+    },
+    "validation": {
+      "macro_f1": 0.969158232574512,
+      "per_class_recall": {
+        "Experimental/Investigational": 1.0,
+        "Medical Necessity": 0.9988668555240793,
+        "Urgent Care": 1.0
+      }
+    }
+  },
+  "tfidf_lr_shortcuts_removed": {
+    "test": {
+      "macro_f1": 0.9772044550700869,
+      "per_class_recall": {
+        "Experimental/Investigational": 1.0,
+        "Medical Necessity": 0.9995703544575725,
+        "Urgent Care": 0.875
+      }
+    },
+    "validation": {
+      "macro_f1": 0.969158232574512,
+      "per_class_recall": {
+        "Experimental/Investigational": 1.0,
+        "Medical Necessity": 0.9988668555240793,
+        "Urgent Care": 1.0
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "calibration": "temperature scaling on grouped (by reason template) out-of-fold predictions",
+  "candidates": [
+    "logreg",
+    "linear_svm_calibrated"
+  ],
+  "data_hashes": {
+    "gold": "18e400286d0fd71ea8809efbfbc3f040a435d11aab9704eefbacb070ddca9042",
+    "train": "d1f8df358d8bc8ee8e35af241bec2f1dc8bf5fcfc28435392070b68a4bb4d77f",
+    "validation": "82d2c1c78282e30392899fa478bb741f08165e670b8165199d289cbf1b5c21df"
+  },
+  "git_sha": "e25f2e66eb665c8b55e78dd2bb3f20c360530e5b",
+  "seed": 20251123
+}

@@ -80,6 +80,7 @@ def classify(reason: str | None, codes: list[str], service: str | None, threshol
         if m1 is not None:
             probs = m1.predict_proba_one(reason, codes)
             source = "model"
+            threshold = getattr(m1, "threshold", threshold)  # chosen from the coverage-vs-accuracy curve
     except Exception:
         probs = None
     if probs is None:

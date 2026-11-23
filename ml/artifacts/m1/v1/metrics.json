@@ -1,0 +1,197 @@
+{
+  "ablation_no_codes": {
+    "gold_macro_f1": 0.6468058968058968,
+    "validation_macro_f1": 1.0
+  },
+  "ask_user_threshold": 0.7,
+  "coverage_curve_validation": [
+    {
+      "accuracy": 0.8426483233018057,
+      "coverage": 0.9968571428571429,
+      "threshold": 0.3
+    },
+    {
+      "accuracy": 0.8436501017146179,
+      "coverage": 0.9831428571428571,
+      "threshold": 0.35
+    },
+    {
+      "accuracy": 0.8528708133971292,
+      "coverage": 0.9554285714285714,
+      "threshold": 0.4
+    },
+    {
+      "accuracy": 0.8685518955873213,
+      "coverage": 0.9194285714285715,
+      "threshold": 0.45
+    },
+    {
+      "accuracy": 0.8836529086772831,
+      "coverage": 0.8791428571428571,
+      "threshold": 0.5
+    },
+    {
+      "accuracy": 0.9165797705943691,
+      "coverage": 0.822,
+      "threshold": 0.55
+    },
+    {
+      "accuracy": 0.9234347048300536,
+      "coverage": 0.7985714285714286,
+      "threshold": 0.6
+    },
+    {
+      "accuracy": 0.9367041198501873,
+      "coverage": 0.7628571428571429,
+      "threshold": 0.65
+    },
+    {
+      "accuracy": 0.9510299261562378,
+      "coverage": 0.7351428571428571,
+      "threshold": 0.7
+    },
+    {
+      "accuracy": 0.9623938536190861,
+      "coverage": 0.7065714285714285,
+      "threshold": 0.75
+    },
+    {
+      "accuracy": 0.9706005879882402,
+      "coverage": 0.6802857142857143,
+      "threshold": 0.8
+    },
+    {
+      "accuracy": 0.9758877685225779,
+      "coverage": 0.6517142857142857,
+      "threshold": 0.85
+    },
+    {
+      "accuracy": 0.9757437070938215,
+      "coverage": 0.6242857142857143,
+      "threshold": 0.9
+    },
+    {
+      "accuracy": 0.9979949874686717,
+      "coverage": 0.57,
+      "threshold": 0.95
+    }
+  ],
+  "gold_accuracy_when_answered": 0.8888888888888888,
+  "gold_confusion_matrix": {
+    "labels": [
+      "medical_necessity",
+      "prior_authorization",
+      "out_of_network",
+      "coding_billing_error",
+      "experimental_investigational",
+      "not_covered_benefit",
+      "timely_filing",
+      "other_unclear"
+    ],
+    "matrix": [
+      [
+        15,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        6
+      ],
+      [
+        0,
+        0,
+        15,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        12,
+        0,
+        0,
+        0,
+        3
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        15,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        15,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        11,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        7,
+        0,
+        8
+      ]
+    ]
+  },
+  "gold_coverage_at_threshold": 0.825,
+  "gold_ece": 0.10662661678193935,
+  "gold_macro_f1": 0.837992722643458,
+  "gold_per_class_recall": {
+    "coding_billing_error": 0.8,
+    "experimental_investigational": 1.0,
+    "medical_necessity": 1.0,
+    "not_covered_benefit": 1.0,
+    "other_unclear": 0.5333333333333333,
+    "out_of_network": 1.0,
+    "prior_authorization": 0.6,
+    "timely_filing": 0.7333333333333333
+  },
+  "oof_coverage_at_threshold": 0.7351428571428571,
+  "oof_ece_calibrated": 0.0338549083678631,
+  "oof_ece_raw": 0.20774511723002934,
+  "oof_macro_f1_unseen_templates": 0.8402991791226839,
+  "selected_model": "logreg",
+  "temperature": 0.44983182142517136,
+  "validation_macro_f1": {
+    "linear_svm_calibrated": 1.0,
+    "logreg": 1.0
+  }
+}

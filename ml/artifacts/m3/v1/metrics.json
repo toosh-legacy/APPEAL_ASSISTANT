@@ -1,0 +1,251 @@
+{
+  "baseline_eb_smoothed_subcategory": {
+    "prior_alpha": 3.467479813637952,
+    "prior_beta": 3.623783767277623,
+    "test": {
+      "brier": 0.20211188804891161,
+      "log_loss": 0.5889897638473331,
+      "roc_auc": 0.7046258973908344
+    },
+    "validation": {
+      "brier": 0.20667386438157123,
+      "log_loss": 0.6002284077841014,
+      "roc_auc": 0.7078067533345755
+    }
+  },
+  "baseline_overall_rate": {
+    "test": {
+      "brier": 0.2542986806743731,
+      "log_loss": 0.7017459579934388,
+      "roc_auc": 0.5
+    },
+    "validation": {
+      "brier": 0.25325639863873295,
+      "log_loss": 0.6996610553661294,
+      "roc_auc": 0.5
+    }
+  },
+  "beats_eb_baseline_on_test_brier": true,
+  "by_year_test": [
+    {
+      "brier": 0.1977095938960584,
+      "log_loss": 0.5856256188729245,
+      "roc_auc": 0.7244700735780494,
+      "year": 2024
+    },
+    {
+      "brier": 0.17873129641114524,
+      "log_loss": 0.532194465220539,
+      "roc_auc": 0.7344883896386956,
+      "year": 2025
+    }
+  ],
+  "calibration_test": [
+    {
+      "bin": "0.1-0.2",
+      "mean_pred": 0.15588819536792015,
+      "n": 144,
+      "observed": 0.2916666666666667
+    },
+    {
+      "bin": "0.2-0.3",
+      "mean_pred": 0.26182028710581207,
+      "n": 249,
+      "observed": 0.3293172690763052
+    },
+    {
+      "bin": "0.3-0.4",
+      "mean_pred": 0.35808084752195457,
+      "n": 531,
+      "observed": 0.5291902071563088
+    },
+    {
+      "bin": "0.4-0.5",
+      "mean_pred": 0.45269486406879533,
+      "n": 584,
+      "observed": 0.5154109589041096
+    },
+    {
+      "bin": "0.5-0.6",
+      "mean_pred": 0.550988067404922,
+      "n": 537,
+      "observed": 0.5884543761638734
+    },
+    {
+      "bin": "0.6-0.7",
+      "mean_pred": 0.6439940109729441,
+      "n": 573,
+      "observed": 0.631762652705061
+    },
+    {
+      "bin": "0.7-0.8",
+      "mean_pred": 0.761591304027754,
+      "n": 858,
+      "observed": 0.796037296037296
+    },
+    {
+      "bin": "0.8-0.9",
+      "mean_pred": 0.840845219179433,
+      "n": 687,
+      "observed": 0.8093158660844251
+    },
+    {
+      "bin": "0.9-1.0",
+      "mean_pred": 0.9363603771163331,
+      "n": 1271,
+      "observed": 0.8867033831628639
+    }
+  ],
+  "excluded_features": {
+    "age_range": "sensitive attribute; used only for fairness slices",
+    "days_to_adopt": "happens after the decision -> leakage",
+    "findings": "post-decision text that states the conclusion -> target leakage",
+    "patient_gender": "sensitive attribute; used only for fairness slices"
+  },
+  "fairness_slices_test": {
+    "age_range": [
+      {
+        "brier": 0.2462754680129745,
+        "calibration_gap": -0.06965006091561543,
+        "fnr@0.5": 0.33548387096774196,
+        "fpr@0.5": 0.6829268292682927,
+        "group": "0 to 10",
+        "mean_predicted": 0.58435837790295,
+        "n": 237,
+        "observed_rate": 0.6540084388185654
+      },
+      {
+        "brier": 0.21275881304818706,
+        "calibration_gap": -0.014887666456990467,
+        "fnr@0.5": 0.20357142857142857,
+        "fpr@0.5": 0.6176470588235294,
+        "group": "11 to 20",
+        "mean_predicted": 0.6581892566199327,
+        "n": 416,
+        "observed_rate": 0.6730769230769231
+      },
+      {
+        "brier": 0.17689634598789628,
+        "calibration_gap": -0.04672474823012607,
+        "fnr@0.5": 0.14175257731958762,
+        "fpr@0.5": 0.631578947368421,
+        "group": "21 to 30",
+        "mean_predicted": 0.6979969408293749,
+        "n": 521,
+        "observed_rate": 0.744721689059501
+      },
+      {
+        "brier": 0.16610055308675378,
+        "calibration_gap": -0.04355191890751142,
+        "fnr@0.5": 0.15214384508990317,
+        "fpr@0.5": 0.5111111111111111,
+        "group": "31 to 40",
+        "mean_predicted": 0.6845447578296487,
+        "n": 993,
+        "observed_rate": 0.7280966767371602
+      },
+      {
+        "brier": 0.18170251315030977,
+        "calibration_gap": -0.014597019296693992,
+        "fnr@0.5": 0.14893617021276595,
+        "fpr@0.5": 0.5653495440729484,
+        "group": "41 to 50",
+        "mean_predicted": 0.6937363140366394,
+        "n": 1128,
+        "observed_rate": 0.7083333333333334
+      },
+      {
+        "brier": 0.19557623199220608,
+        "calibration_gap": -0.009874058010613807,
+        "fnr@0.5": 0.2231012658227848,
+        "fpr@0.5": 0.4625,
+        "group": "51 to 64",
+        "mean_predicted": 0.6539914882078736,
+        "n": 1904,
+        "observed_rate": 0.6638655462184874
+      },
+      {
+        "brier": 0.17644149781119556,
+        "calibration_gap": 0.006870358597046877,
+        "fnr@0.5": 0.2361111111111111,
+        "fpr@0.5": 0.37254901960784315,
+        "group": "65+",
+        "mean_predicted": 0.5922362122555834,
+        "n": 246,
+        "observed_rate": 0.5853658536585366
+      }
+    ],
+    "patient_gender": [
+      {
+        "brier": 0.18014722423089904,
+        "calibration_gap": -0.008177190966123793,
+        "fnr@0.5": 0.16016713091922005,
+        "fpr@0.5": 0.5192909280500522,
+        "group": "Female",
+        "mean_predicted": 0.6837598472606671,
+        "n": 3113,
+        "observed_rate": 0.6919370382267909
+      },
+      {
+        "brier": 0.1993223100081739,
+        "calibration_gap": -0.04296430617421132,
+        "fnr@0.5": 0.2300380228136882,
+        "fpr@0.5": 0.5206611570247934,
+        "group": "Male",
+        "mean_predicted": 0.641931527159122,
+        "n": 2304,
+        "observed_rate": 0.6848958333333334
+      }
+    ]
+  },
+  "features": [
+    "treatment_category",
+    "treatment_subcategory",
+    "diagnosis_category",
+    "diagnosis_subcategory",
+    "type",
+    "imr_type",
+    "year"
+  ],
+  "hist_gradient_boosting": {
+    "test": {
+      "brier": 0.18819430424797523,
+      "log_loss": 0.5588364454163566,
+      "roc_auc": 0.7287054517142787
+    },
+    "validation": {
+      "brier": 0.19445096293808053,
+      "log_loss": 0.5710498740744636,
+      "roc_auc": 0.7398586988773194
+    }
+  },
+  "logreg_onehot": {
+    "test": {
+      "brier": 0.18925763472713542,
+      "log_loss": 0.5594388370880735,
+      "roc_auc": 0.7231685101091703
+    },
+    "validation": {
+      "brier": 0.19970773494764069,
+      "log_loss": 0.5846605441320685,
+      "roc_auc": 0.7172562982590516
+    }
+  },
+  "selected_model": "hist_gradient_boosting",
+  "sizes": {
+    "test": 5445,
+    "train": 34481,
+    "validation": 2246
+  },
+  "split": {
+    "excluded_partial_years": [
+      2026
+    ],
+    "test_years": [
+      2024,
+      2025
+    ],
+    "train_years": "2001-2022",
+    "validation_year": 2023
+  }
+}
