@@ -18,3 +18,4 @@ apps/web/playwright-report/
 ml/artifacts/**/*.joblib
 ml/artifacts/**/*.npy
 *.tsbuildinfo
+data/processed/imr.parquet
