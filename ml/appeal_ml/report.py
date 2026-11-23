@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 from appeal_ml.common import ARTIFACTS, REPORTS, pinned
-from appeal_ml.promotion_check import BASELINE, primary_value
+from appeal_ml.promotion_check import BASELINE, baseline_key, primary_value
 
 
 def write_report() -> str:
@@ -20,7 +20,7 @@ def write_report() -> str:
             continue
         m = json.loads(p.read_text())
         v = primary_value(model, m)
-        lines.append(f"| {model} | {version} | {names[model]} | {v:.4f} | {base.get(model, float('nan')):.4f} |")
+        lines.append(f"| {model} | {version} | {names[model]} | {v:.4f} | {base.get(baseline_key(model), float('nan')):.4f} |")
         details.append((model, m))
     for model, m in details:
         lines += ["", f"## {model}", ""]

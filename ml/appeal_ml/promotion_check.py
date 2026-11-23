@@ -25,16 +25,30 @@ def primary_value(model: str, metrics: dict) -> float:
     return float(v)
 
 
+def baseline_key(model: str) -> str:
+    """Baselines are only comparable on the same data: M2/M3 key on the IMR source (real vs CI synthetic sample)."""
+    if model == "m1":
+        return model
+    try:
+        from appeal_ml.common import ROOT
+
+        src = json.loads((ROOT / "data" / "manifest.json").read_text())["datasets"]["imr"]["source"]
+    except Exception:
+        src = "unknown"
+    return model if src == "real" else f"{model}@{src}"
+
+
 def should_promote(model: str, version: str) -> tuple[bool, str]:
     m = json.loads((ARTIFACTS / model / version / "metrics.json").read_text())
     new = primary_value(model, m)
     base = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
-    if model not in base:
-        base[model] = new
+    key = baseline_key(model)
+    if key not in base:
+        base[key] = new
         REPORTS.mkdir(parents=True, exist_ok=True)
         save_json(BASELINE, base)
         return True, f"first version, primary={new:.4f}"
-    old = base[model]
+    old = base[key]
     direction = PRIMARY[model][1]
     regress = (old - new) if direction == "higher" else (new - old)
     tol = 0.01 if model != "m3" else 0.001  # 1 point (F1) / 0.001 Brier
