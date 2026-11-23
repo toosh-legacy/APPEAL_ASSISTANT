@@ -17,14 +17,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <header className="border-b border-slate-200 bg-white">
-          <nav aria-label="Main" className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-            <Link href="/" className="font-bold text-slate-900 no-underline">
+          <nav aria-label="Main" className="mx-auto flex max-w-3xl items-center justify-between px-4 py-1">
+            <Link href="/" className="inline-flex min-h-11 items-center font-bold text-slate-900 no-underline">
               Appeal Assistant
             </Link>
-            <div className="flex gap-4 text-sm">
-              <Link href="/start">Start</Link>
-              <Link href="/insights/insurers">Insurers</Link>
-              <Link href="/about/data">Data &amp; sources</Link>
+            <div className="flex gap-2 text-sm sm:gap-4">
+              <Link href="/start" className="inline-flex min-h-11 items-center px-1">
+                Start
+              </Link>
+              <Link href="/insights/insurers" className="inline-flex min-h-11 items-center px-1">
+                Insurers
+              </Link>
+              <Link href="/about/data" className="inline-flex min-h-11 items-center px-1">
+                Data &amp; sources
+              </Link>
             </div>
           </nav>
         </header>

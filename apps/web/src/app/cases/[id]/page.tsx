@@ -67,7 +67,11 @@ function SourceFootnote({ n, src }: { n: number; src: any }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <button type="button" className="mx-0.5 align-super text-xs font-semibold text-brand-dark underline" aria-label={`Source ${n}: ${src?.citation ?? ""}`}>
+        <button
+          type="button"
+          className="mx-0.5 inline-flex min-h-6 min-w-6 items-center justify-center align-super text-xs font-semibold text-brand-dark underline"
+          aria-label={`Source ${n}: ${src?.citation ?? ""}`}
+        >
           [{n}]
         </button>
       </Dialog.Trigger>

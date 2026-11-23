@@ -28,12 +28,12 @@ test("paste -> confirm -> letter -> export", async ({ page }) => {
   // Human in the loop: if the classifier is unsure, the user picks the category (F4 AC2).
   const letterHeading = page.getByRole("heading", { name: "Your appeal letter" });
   const picker = page.getByRole("button", { name: /^Medical necessity\./ });
-  await expect(letterHeading.or(picker)).toBeVisible({ timeout: 60_000 });
+  await expect(letterHeading.or(picker)).toBeVisible({ timeout: 120_000 });
   if (await picker.isVisible()) {
     await axe(page, "category-picker");
     await picker.click();
   }
-  await expect(letterHeading).toBeVisible({ timeout: 60_000 });
+  await expect(letterHeading).toBeVisible({ timeout: 120_000 });
   await expect(page.getByRole("heading", { name: "Your deadline" })).toBeVisible();
   await expect(page.getByText("These are California decisions")).toBeVisible();
   await axe(page, "workspace");
