@@ -171,8 +171,7 @@ def test_low_confidence_goes_to_needs_category(client):
     confirm(client, cid, H, {"notice_date": "2025-06-01"})
     drain()
     d = client.get(f"/v1/cases/{cid}", headers=H).json()
-    if d["status"] != "NEEDS_CATEGORY":
-        pytest.skip(f"classifier was confident ({d['classification']['probability']})")
+    assert d["status"] == "NEEDS_CATEGORY", d.get("classification")
     assert client.post(f"/v1/cases/{cid}/category", json={"category": "medical_necessity"}, headers=H).status_code == 200
     drain()
     assert client.get(f"/v1/cases/{cid}", headers=H).json()["status"] in ("READY", "NEEDS_HUMAN")
@@ -199,11 +198,13 @@ def test_exports_blocked_until_placeholders_filled(client):
 
 
 def test_regenerate_section(client):
-    cid, H = create(client, _gold(7)["text"])
+    cid, H = create(client, _gold(10)["text"])
     drain()
     confirm(client, cid, H)
     drain()
-    before = client.get(f"/v1/cases/{cid}/letter", headers=H).json()
+    before = client.get(f"/v1/cases/{cid}/letter", headers=H)
+    assert before.status_code == 200, before.text
+    before = before.json()
     r = client.post(f"/v1/cases/{cid}/letter/regenerate", json={"section_id": "request", "reason": "firmer"}, headers=H)
     assert r.status_code == 200, r.text
     after = r.json()
