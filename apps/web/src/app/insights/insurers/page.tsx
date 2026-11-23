@@ -33,7 +33,7 @@ export default function Insurers() {
           ))}
         </tbody>
       </table>
-      <p className="text-xs">Source: CMS Transparency in Coverage public use file.</p>
+      <p className="text-xs">{q.data.source}</p>
     </div>
   );
 }

@@ -330,6 +330,12 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
                 <span className="font-semibold">What this usually means: </span>
                 {cls.usually_means}
               </p>
+              {c.insurer_reported && (
+                <p className="text-sm">
+                  {c.insurer_reported.issuer} reported denying {(100 * c.insurer_reported.denial_rate).toFixed(1)}% of Marketplace claims in{" "}
+                  {c.insurer_reported.plan_year} (CMS). {c.insurer_reported.disclaimer}
+                </p>
+              )}
               {Object.entries(c.denial_code_notes ?? {}).map(([code, note]) => (
                 <p key={code} className="text-sm">
                   Code {code}: {String(note ?? "")}

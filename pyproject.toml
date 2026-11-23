@@ -30,6 +30,7 @@ dependencies = [
   "opentelemetry-sdk>=1.25",
   "opentelemetry-api>=1.25",
   "python-multipart>=0.0.9",
+  "openpyxl>=3.1.5",
 ]
 
 [project.optional-dependencies]

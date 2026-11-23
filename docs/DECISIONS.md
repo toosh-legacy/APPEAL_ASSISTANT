@@ -52,3 +52,5 @@ One line each: **decision** — reason — alternative considered.
 - **SSE keeps streaming past stale terminal events during replay** — a client reconnecting from event 0 saw an old NEEDS_CATEGORY and disconnected although the case had moved on — end the stream on the first terminal event.
 - **Eval pipeline auto-confirms facts and accepts the suggested category** — measures the system, not a simulated user's corrections — skip NEEDS_CATEGORY cases.
 - **Red-team "behavior changed" = banned output phrases (word-boundary), category differs from the clean twin, or the case did not finish** — mechanical, reproducible definition — manual review.
+- **D3 uses the newest PUF (2027 release, plan-year 2025 data), individual-market QHP sheet, issuer level; denials = in-network + out-of-network** — SPEC asks for issuer-level claims/denials/appeals; SHOP and dental sheets skipped — plan-level rows.
+- **Insurer insights flag turned on (`FEATURE_INSURER_INSIGHTS=true`) because D3 loaded** — SPEC fallback hides it only when D3 fails — keep hidden.

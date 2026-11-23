@@ -56,3 +56,15 @@ test("about page has attribution", async ({ page }) => {
   await expect(page.getByText("California Department of Managed Health Care").first()).toBeVisible();
   await axe(page, "about");
 });
+
+test("insurer insights shows CMS disclaimer", async ({ page }) => {
+  await page.goto("/insights/insurers");
+  await expect(page.getByText("not necessarily indicative of issuer strength or plan quality")).toBeVisible({ timeout: 15_000 });
+  await axe(page, "insights");
+});
+
+test("admin page renders the token form", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page.getByLabel("Admin token (from .env)")).toBeVisible();
+  await axe(page, "admin");
+});

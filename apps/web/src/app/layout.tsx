@@ -23,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <div className="flex gap-4 text-sm">
               <Link href="/start">Start</Link>
+              <Link href="/insights/insurers">Insurers</Link>
               <Link href="/about/data">Data &amp; sources</Link>
             </div>
           </nav>

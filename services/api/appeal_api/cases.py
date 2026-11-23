@@ -220,6 +220,18 @@ def get_case(response: Response, case_id: str = Depends(require_case_access), db
         if pbk:
             svc = (ex.fields.get("service") if ex else None) or "the service"
             out["clinician_request"] = pbk["clinician_request"].format(clinician="[ADD: clinician name]", service=svc, category_label=pbk["label"], deadline=dl)
+    if ex and ex.fields.get("insurer"):
+        from appeal_core.models import InsurerStats
+        from sqlalchemy import func as sqlfunc
+
+        ins = db.scalar(select(InsurerStats).where(sqlfunc.lower(InsurerStats.issuer) == str(ex.fields["insurer"]).lower()).limit(1))
+        if ins and ins.claims_received:
+            out["insurer_reported"] = {
+                "issuer": ins.issuer,
+                "plan_year": ins.plan_year,
+                "denial_rate": ins.claims_denied / ins.claims_received,
+                "disclaimer": "Claims denials are not necessarily indicative of issuer strength or plan quality.",
+            }
     letter = _letter(db, case_id)
     if letter:
         out["letter"] = {"version": letter.version, "placeholders_remaining": letter.placeholders_remaining, "review_score": letter.review_score}
@@ -523,7 +535,8 @@ def insurers(db: Session = Depends(get_db)) -> dict:
 
     rows = db.scalars(select(InsurerStats).order_by(InsurerStats.state, InsurerStats.issuer)).all()
     return {
-        "disclaimer": "CMS notes that denial counts are not necessarily indicative of an issuer's strength or plan quality.",
+        "disclaimer": "Claims denials are not necessarily indicative of issuer strength or plan quality. (CMS Transparency in Coverage PUF disclaimer)",
+        "source": "CMS Transparency in Coverage public use file (2027 release, plan year 2025 data), individual Marketplace QHP issuers",
         "issuers": [
             {
                 "plan_year": r.plan_year,

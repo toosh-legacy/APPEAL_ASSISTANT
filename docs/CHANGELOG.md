@@ -47,3 +47,8 @@
 - `infra/README.md` mapping every SPEC 7.2 resource to its Bicep module, the local adapter it replaces, the switch and the env vars; 19 stub modules + `main.bicep`, parameters per environment, `azure.yaml` (nothing deployed).
 - Azure adapter classes raise `NotConfigured` naming the missing variables; `tests/test_azure_contracts.py` checks every switch fails clearly without credentials and skips live contract tests.
 - ADR skeletons (`docs/adr/`) and the STRIDE threat model (`docs/threat-model.md`).
+
+## P1 tasks
+- D3: CMS Transparency in Coverage PUF (2027 release, plan-year 2025 data) → `insurer_stats` (136 individual-Marketplace issuers); F9 `/insights/insurers` enabled with CMS's own disclaimer; exact-name insurer line on the explanation card.
+- Admin page (`/admin`): eval runs, data-refresh status, redacted case traces with per-agent latency, prompt versions and tokens.
+- Playwright: 8 tests (desktop + mobile) incl. axe on insights and admin pages.

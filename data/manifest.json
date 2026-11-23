@@ -109,6 +109,17 @@
       "source": "real",
       "url": "https://data.chhs.ca.gov/dataset/b79b3447-4c10-4ae6-84e2-1076f83bb24e/resource/3340c5d7-4054-4d03-90e0-5f44290ed095/download/independent-medical-review-imr-determinations-trends.csv"
     },
+    "insurers": {
+      "data_plan_year": 2025,
+      "disclaimer": "Claims denials are not necessarily indicative of issuer strength or plan quality.",
+      "downloaded_at": "2026-11-23T08:22:23+00:00",
+      "page": "https://www.cms.gov/marketplace/resources/data/public-use-files",
+      "rows": 136,
+      "schema_ok": true,
+      "sha256": "72f64531e10f69e0c702a8812b78c8f603636f92128e9697672ad6bf0be84006",
+      "source": "real",
+      "url": "https://download.cms.gov/marketplace-puf/2027/transparency-in-coverage-puf.zip"
+    },
     "kb_summaries": {
       "deadline_rules_disabled": [],
       "rows": 19,
