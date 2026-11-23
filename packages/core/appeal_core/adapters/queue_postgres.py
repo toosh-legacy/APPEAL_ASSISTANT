@@ -58,6 +58,8 @@ class PostgresJobQueue:
                 ),
                 {"w": worker_id, "lease": lease_seconds, "id": row.id},
             ).first()
+        if r is None:  # the row was deleted between SELECT and UPDATE
+            return None
         return ClaimedJob(id=r.id, topic=r.topic, payload=r.payload, case_id=r.case_id, attempts=r.attempts)
 
     def extend(self, job_id: int, lease_seconds: int = 60) -> None:

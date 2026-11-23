@@ -44,7 +44,7 @@ _STD = set(vars(logging.LogRecord("", 0, "", 0, "", (), None)).keys()) | {"messa
 
 class ScrubbingJsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        payload = {"level": record.levelname, "logger": record.name, "msg": record.getMessage()}
+        payload: dict[str, Any] = {"level": record.levelname, "logger": record.name, "msg": record.getMessage()}
         for k, v in record.__dict__.items():
             if k not in _STD:
                 payload[k] = v

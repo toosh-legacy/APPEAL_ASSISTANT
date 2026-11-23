@@ -10,6 +10,7 @@ from datetime import date, datetime
 from typing import Any, Literal
 
 from appeal_core.adapters import get_blob_store, get_progress_bus, get_queue
+from appeal_core.db import must_get
 from appeal_core.extract_text import MAX_BYTES, MAX_PASTE_CHARS
 from appeal_core.kb import CATEGORIES, denial_code_descriptions, playbooks
 from appeal_core.models import (
@@ -90,7 +91,7 @@ def _case(db: Session, case_id: str) -> Case:
 
 
 def _vault(db: Session, case_id: str) -> tuple[bytes, TokenMap]:
-    v = db.get(TokenVault, case_id)
+    v = must_get(db, TokenVault, case_id)
     dk = unwrap(v.wrapped_data_key)
     return dk, TokenMap.from_json(decrypt(dk, v.encrypted_map, "tokenmap"))
 
@@ -151,10 +152,12 @@ def create_case(body: CreateCase, request: Request, response: Response, idempote
         doc = Document(case_id=case.id, kind="pasted", sha256=hashlib.sha256(body.text.encode()).hexdigest(), text_encrypted=encrypt(dk, body.text, "document"), pages=1)
     else:
         try:
+            if not body.blob_name:
+                raise ValueError
             data = get_blob_store().get(body.blob_name)
         except Exception:
             raise Problem(422, "Upload not found", "The file upload did not finish. Please try again.")
-        doc = Document(case_id=case.id, kind=body.blob_name.rsplit(".", 1)[-1], blob_uri=f"uploads/{body.blob_name}", sha256=hashlib.sha256(data).hexdigest())
+        doc = Document(case_id=case.id, kind=(body.blob_name or "").rsplit(".", 1)[-1], blob_uri=f"uploads/{body.blob_name}", sha256=hashlib.sha256(data).hexdigest())
     db.add(doc)
     db.add(TokenVault(case_id=case.id, wrapped_data_key=wrapped, encrypted_map=encrypt(dk, "{}", "tokenmap")))
     from appeal_core.telemetry import span, trace_carrier
@@ -290,6 +293,8 @@ def confirm_extraction(body: Corrections, case_id: str = Depends(require_case_ac
     if c.status != Status.AWAITING_CONFIRMATION:
         raise Problem(409, "Not awaiting confirmation", f"Case is {c.status}.")
     ex = db.scalar(select(Extraction).where(Extraction.case_id == case_id))
+    if ex is None:
+        raise Problem(409, "Nothing to confirm", "The letter has not been read yet.")
     dk, tmap = _vault(db, case_id)
     corr = dict(ex.user_corrections or {})
     for k, v in body.fields.items():
@@ -312,7 +317,7 @@ def confirm_extraction(body: Corrections, case_id: str = Depends(require_case_ac
         c.plan_type = corr["plan_type"]
     if "state" in corr:
         c.state = corr["state"]
-    v = db.get(TokenVault, case_id)
+    v = must_get(db, TokenVault, case_id)
     v.encrypted_map = encrypt(dk, tmap.to_json(), "tokenmap")
     try:
         transition(db, c, Status.CLASSIFYING, actor="user", expected_version=expected)
@@ -428,11 +433,11 @@ def regenerate(body: RegenerateRequest, request: Request, case_id: str = Depends
     if prev is None or res is None:
         raise Problem(404, "Letter not ready")
     from appeal_worker import agents
-    from appeal_worker.orchestrator import Orchestrator
+    from appeal_worker.orchestrator import facts_for
 
-    orch = Orchestrator.__new__(Orchestrator)
-    orch.Session = None
-    facts, tmap, dk, flags = Orchestrator.facts_for(orch, db, case_id)
+    if not c.category:
+        raise Problem(409, "No category yet", "Pick a denial category first.")
+    facts, tmap, dk, flags = facts_for(db, case_id)
     research = Research(**res)
     draft = agents.write(facts, c.category, research, tmap.raw_values(), revision=99, style=body.reason, section_id=body.section_id)
     rv = agents.review(draft, research, facts, set(tmap.tokens), flags)

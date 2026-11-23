@@ -16,7 +16,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from appeal_core.adapters import get_blob_store, get_progress_bus, get_queue, get_text_extractor
-from appeal_core.db import session_factory
+from appeal_core.db import must_get, must_scalar, session_factory
 from appeal_core.extract_text import UnsupportedDocument
 from appeal_core.llm.base import CALL_LOG
 from appeal_core.models import AgentRun, Case, Citation, Deadline, Document, Extraction, Letter, TokenVault
@@ -85,8 +85,8 @@ class Orchestrator:
         with self.Session() as s:
             row = self._cached(s, case_id, agent, h)
             if row is not None:
-                return row.output
-            case = s.get(Case, case_id)
+                return dict(row.output or {})
+            case = must_get(s, Case, case_id)
             if Status(case.status) not in pre:
                 raise StepFailed(f"{agent}: case in {case.status}, expected one of {sorted(pre)}")
         n0 = len(CALL_LOG.records)
@@ -97,7 +97,7 @@ class Orchestrator:
         recs = CALL_LOG.records[n0:]
         self.provider_calls += len(recs)
         with self.Session.begin() as s:
-            case = s.get(Case, case_id)
+            case = must_get(s, Case, case_id)
             s.add(
                 AgentRun(
                     case_id=case_id,
@@ -125,9 +125,7 @@ class Orchestrator:
         return out
 
     def _vault(self, s: Session, case_id: str) -> tuple[bytes, TokenMap]:
-        v = s.get(TokenVault, case_id)
-        dk = unwrap(v.wrapped_data_key)
-        return dk, TokenMap.from_json(decrypt(dk, v.encrypted_map, "tokenmap"))
+        return vault_keys(s, case_id)
 
     # ------------------------------------------------------------------ job entry
     def handle(self, topic: str, case_id: str, carrier: dict | None = None) -> None:
@@ -153,30 +151,32 @@ class Orchestrator:
     # ------------------------------------------------------------------ ingest
     def ingest(self, case_id: str) -> None:
         with self.Session.begin() as s:
-            case = s.get(Case, case_id)
+            case = must_get(s, Case, case_id)
             if case.status == Status.RECEIVED:
                 transition(s, case, Status.EXTRACTING, actor="worker")
                 self.publish(case_id, type="status", status=Status.EXTRACTING.value)
             elif case.status != Status.EXTRACTING:
                 return  # already past intake
-            doc = s.scalar(select(Document).where(Document.case_id == case_id))
+            doc = must_scalar(s, select(Document).where(Document.case_id == case_id), "document")
             doc_key = {"doc": doc.id, "sha": doc.sha256}
 
         def run_intake() -> dict:
             with self.Session() as s:
-                doc = s.scalar(select(Document).where(Document.case_id == case_id))
-                v = s.get(TokenVault, case_id)
+                doc: Document = must_scalar(s, select(Document).where(Document.case_id == case_id), "document")
+                v = must_get(s, TokenVault, case_id)
                 dk = unwrap(v.wrapped_data_key)
                 if doc.text_encrypted is not None:
                     raw = decrypt(dk, doc.text_encrypted, "document")
                 else:
+                    if not doc.blob_uri:
+                        raise UnsupportedDocument("document has neither text nor an uploaded file")
                     data = get_blob_store().get(doc.blob_uri.split("/", 1)[1])
                     raw, pages = get_text_extractor().extract(data, doc.blob_uri)
             ext, tokenized, tmap = agents.intake(raw)
             return {"extracted": ext.model_dump(), "tokenized": tokenized, "tmap": encrypt(dk, tmap.to_json(), "tokenmap").hex()}
 
         def save(s: Session, case: Case, out: dict) -> None:
-            v = s.get(TokenVault, case_id)
+            v = must_get(s, TokenVault, case_id)
             v.encrypted_map = bytes.fromhex(out["tmap"])
             ext = out["extracted"]
             fields = {k: fv["value"] for k, fv in ext["fields"].items()}
@@ -194,26 +194,15 @@ class Orchestrator:
             self.step(case_id, "intake", doc_key, run_intake, {Status.EXTRACTING}, lambda o: Status.AWAITING_CONFIRMATION, save)
         except UnsupportedDocument as e:
             with self.Session.begin() as s:
-                case = s.get(Case, case_id)
+                case = must_get(s, Case, case_id)
                 case.error = str(e)
                 transition(s, case, Status.FAILED, actor="worker")
             self.publish(case_id, type="status", status="FAILED", message=str(e))
 
     # ------------------------------------------------------------------ draft
     def facts_for(self, s: Session, case_id: str) -> tuple[dict, TokenMap, bytes, list[str]]:
-        ex = s.scalar(select(Extraction).where(Extraction.case_id == case_id))
-        dk, tmap = self._vault(s, case_id)
-        facts = dict(ex.fields)
-        facts.update({k: v for k, v in (ex.user_corrections or {}).items() if v not in (None, "")})
-        person = next((t for t in tmap.tokens if t.startswith("[PERSON_")), None)
-        facts["member_name"] = person
-        if isinstance(facts.get("denial_codes"), str):
-            facts["denial_codes"] = [c.strip() for c in facts["denial_codes"].split(",") if c.strip()]
-        # any raw identifier typed in a correction is tokenized before it can reach a model
-        for k, v in list(facts.items()):
-            if isinstance(v, str) and k in ("member_id", "claim_number") and not v.startswith("["):
-                facts[k] = tmap.token_for(k.upper(), v)
-        return facts, tmap, dk, (ex.injection or {}).get("flags", [])
+        return facts_for(s, case_id)
+
 
     def draft(self, case_id: str) -> None:
         settings = get_settings()
@@ -221,11 +210,14 @@ class Orchestrator:
             facts, tmap, dk, flags = self.facts_for(s, case_id)
         # persist new tokens created from corrections
         with self.Session.begin() as s:
-            v = s.get(TokenVault, case_id)
+            v = must_get(s, TokenVault, case_id)
             v.encrypted_map = encrypt(dk, tmap.to_json(), "tokenmap")
         raw_values = tmap.raw_values()
 
-        cls_in = {"reason": facts.get("denial_reason"), "codes": facts.get("denial_codes") or [], "service": facts.get("service")}
+        reason: str | None = facts.get("denial_reason")
+        codes: list[str] = list(facts.get("denial_codes") or [])
+        service: str | None = facts.get("service")
+        cls_in = {"reason": reason, "codes": codes, "service": service}
 
         def set_cat(s: Session, case: Case, out: dict) -> None:
             if not out["needs_user"]:
@@ -236,19 +228,19 @@ class Orchestrator:
                 case_id,
                 "classifier",
                 cls_in,
-                lambda: agents.classify(cls_in["reason"], cls_in["codes"], cls_in["service"]).model_dump(),
+                lambda: agents.classify(reason, codes, service).model_dump(),
                 {Status.CLASSIFYING},
                 lambda o: Status.NEEDS_CATEGORY if o["needs_user"] else Status.RESEARCHING,
                 set_cat,
             )
         )
         with self.Session() as s:
-            case = s.get(Case, case_id)
+            case = must_get(s, Case, case_id)
             if case.status == Status.NEEDS_CATEGORY:
                 self.publish(case_id, type="needs_category", status=case.status, suggestion=cls.category, alternatives=cls.alternatives)
                 return
-            category = case.category or cls.category
-            plan_type = case.plan_type or facts.get("plan_type")
+            category: str = case.category or cls.category
+            plan_type: str | None = case.plan_type or facts.get("plan_type")
 
         r_in = {"category": category, "plan_type": plan_type, "service": facts.get("service"), "reason": facts.get("denial_reason"), "notice_date": facts.get("notice_date")}
         res = Research(
@@ -256,7 +248,7 @@ class Orchestrator:
                 case_id,
                 "research",
                 r_in,
-                lambda: agents.research(r_in["category"], r_in["plan_type"], r_in["service"], r_in["reason"], r_in["notice_date"], self.retriever).model_dump(),
+                lambda: agents.research(category, plan_type, service, reason, facts.get("notice_date"), self.retriever).model_dump(),
                 {Status.RESEARCHING},
                 lambda o: Status.DRAFTING,
             )
@@ -302,7 +294,7 @@ class Orchestrator:
                 break
             drops = sorted(set(drops) | set(agents.drops_from_review(draft, rv)))
         with self.Session() as s:
-            st = s.get(Case, case_id).status
+            st = must_get(s, Case, case_id).status
         self.publish(case_id, type="status", status=st)
 
     def _store_letter(self, s: Session, case: Case, draft: LetterDraft, rv: Review, res: Research, tmap: TokenMap, dk: bytes) -> None:
@@ -363,3 +355,27 @@ def run_worker(stop_after_idle: float | None = None, worker_id: str = "worker-1"
         except Exception as e:
             outcome = q.fail(job.id, f"{type(e).__name__}: {e}", settings.job_max_attempts)
             log.error("job failed", extra={"job_id": job.id, "topic": job.topic, "outcome": outcome, "error": type(e).__name__})
+
+
+def vault_keys(s: Session, case_id: str) -> tuple[bytes, TokenMap]:
+    """The case's unwrapped data key and decrypted token map."""
+    v = must_get(s, TokenVault, case_id)
+    dk = unwrap(v.wrapped_data_key)
+    return dk, TokenMap.from_json(decrypt(dk, v.encrypted_map, "tokenmap"))
+
+
+def facts_for(s: Session, case_id: str) -> tuple[dict, TokenMap, bytes, list[str]]:
+    """Confirmed facts (user corrections applied, identifiers tokenized), token map, data key, injection flags."""
+    ex = must_scalar(s, select(Extraction).where(Extraction.case_id == case_id), "extraction")
+    dk, tmap = vault_keys(s, case_id)
+    facts = dict(ex.fields)
+    facts.update({k: v for k, v in (ex.user_corrections or {}).items() if v not in (None, "")})
+    person = next((t for t in tmap.tokens if t.startswith("[PERSON_")), None)
+    facts["member_name"] = person
+    if isinstance(facts.get("denial_codes"), str):
+        facts["denial_codes"] = [c.strip() for c in facts["denial_codes"].split(",") if c.strip()]
+    # any raw identifier typed in a correction is tokenized before it can reach a model
+    for k, v in list(facts.items()):
+        if isinstance(v, str) and k in ("member_id", "claim_number") and not v.startswith("["):
+            facts[k] = tmap.token_for(k.upper(), v)
+    return facts, tmap, dk, (ex.injection or {}).get("flags", [])

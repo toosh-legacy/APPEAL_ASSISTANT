@@ -186,7 +186,8 @@ def export_json_schemas(out_dir) -> list[str]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     written = []
-    for m in [ExtractedDenial, Classification, Research, LetterDraft, Review]:
+    models: list[type[BaseModel]] = [ExtractedDenial, Classification, Research, LetterDraft, Review]
+    for m in models:
         p = out / f"{m.__name__}.schema.json"
         p.write_text(json.dumps(m.model_json_schema(), indent=2), encoding="utf-8")
         written.append(p.name)

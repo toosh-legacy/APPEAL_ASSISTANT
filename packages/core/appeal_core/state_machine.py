@@ -4,8 +4,10 @@ the `version` column (SQLAlchemy version_id_col raises StaleDataError on a lost 
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import cast
 
 from sqlalchemy import update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from appeal_core.models import AuditEvent, Case
@@ -73,7 +75,7 @@ def transition(session: Session, case: Case, dst: Status | str, actor: str = "sy
             .values(status=dst.value, version=expected_version + 1)
             .execution_options(synchronize_session=False)
         )
-        if res.rowcount != 1:
+        if cast(CursorResult, res).rowcount != 1:
             raise ConcurrencyConflict(f"case {case.id} changed (expected version {expected_version})")
         session.refresh(case)
     else:

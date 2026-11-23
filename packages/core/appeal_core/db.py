@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 
-from sqlalchemy import create_engine
+from sqlalchemy import Select, create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -42,3 +42,21 @@ def session_scope(url: str | None = None) -> Iterator[Session]:
         raise
     finally:
         s.close()
+
+
+class MissingRow(LookupError):
+    """A row the code relies on does not exist (e.g. the case was deleted while its job was running)."""
+
+
+def must_get[T](s: Session, model: type[T], key: object) -> T:
+    obj = s.get(model, key)
+    if obj is None:
+        raise MissingRow(f"{model.__name__} {key} not found")
+    return obj
+
+
+def must_scalar[T](s: Session, stmt: Select[T], what: str) -> T:
+    obj = s.scalar(stmt)
+    if obj is None:
+        raise MissingRow(f"{what} not found")
+    return obj

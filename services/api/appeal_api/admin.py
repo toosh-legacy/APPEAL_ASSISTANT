@@ -75,7 +75,9 @@ def metrics(db: Session = Depends(get_db)) -> dict:
     from appeal_core.privacy.leak_gate import blocks_count
     from sqlalchemy import func, text
 
-    lat = dict(db.execute(select(AgentRun.agent, func.percentile_cont(0.5).within_group(AgentRun.latency_ms)).group_by(AgentRun.agent)).all())
+    lat: dict[str, float] = {
+        a: float(v) for a, v in db.execute(select(AgentRun.agent, func.percentile_cont(0.5).within_group(AgentRun.latency_ms)).group_by(AgentRun.agent)).all()
+    }
     writer_runs = db.execute(text("SELECT case_id, count(*) FROM agent_run WHERE agent='writer' GROUP BY case_id")).all()
     total_cases = db.scalar(select(func.count()).select_from(Case)) or 0
     by_status = dict(db.execute(select(Case.status, func.count()).group_by(Case.status)).all())

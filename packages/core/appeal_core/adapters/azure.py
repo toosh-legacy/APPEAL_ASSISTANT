@@ -53,6 +53,9 @@ class AzureSearchRetriever(_AzureAdapter):
 class AzureLanguagePIIDetector(_AzureAdapter):
     service, env_vars, bicep_module = "Azure AI Language PII", ("AZURE_LANGUAGE_ENDPOINT",), "modules/language.bicep"
 
+    def detect(self, text: str) -> list:  # Phase C: Azure AI Language PII entity recognition
+        raise NotImplementedError("Azure AI Language PII is a Phase C adapter")
+
 
 class PromptShieldsDetector(_AzureAdapter):
     service, env_vars, bicep_module = "Content Safety Prompt Shields", ("AZURE_CONTENT_SAFETY_ENDPOINT",), "modules/contentsafety.bicep"

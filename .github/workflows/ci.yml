@@ -34,7 +34,7 @@ jobs:
       - name: Lint
         run: uv run ruff check .
       - name: Type check (core + services)
-        run: uv run mypy packages/core services || true
+        run: uv run mypy packages/core services
       - name: Migrate
         run: uv run python tasks.py migrate
       - name: "Data (CI mode: synthetic IMR sample, eCFR, LSA embeddings)"

@@ -10,7 +10,7 @@ from appeal_core.deadlines import ics_for
 
 def _paragraphs(view: dict[str, Any]) -> tuple[list[str], list[str]]:
     paras, notes = [], []
-    order = {}
+    order: dict[str, int] = {}
     for sec in view["sections"]:
         parts = []
         for s in sec["sentences"]:

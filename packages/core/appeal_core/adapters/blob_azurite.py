@@ -28,8 +28,11 @@ class AzuriteBlobStore:
         """Write-only (create) SAS for one blob, valid `minutes`."""
         self._ensure()
         expiry = datetime.now(UTC) + timedelta(minutes=minutes)
+        account = self.client.account_name
+        if not account:
+            raise RuntimeError("blob connection string has no account name; cannot sign an upload URL")
         sas = generate_blob_sas(
-            account_name=self.client.account_name,
+            account_name=account,
             container_name=self.container,
             blob_name=blob_name,
             account_key=self.client.credential.account_key,

@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from datetime import date
-from typing import Any
+from typing import Any, TypedDict
 
 from appeal_core.adapters import get_injection_detector, get_llm
 from appeal_core.deadlines import compute_deadlines, next_level_options
@@ -18,9 +18,11 @@ from appeal_core.privacy.pii import get_pii_detector
 from appeal_core.privacy.vault import TokenMap, tokenize
 from appeal_core.schemas import (
     Classification,
+    Deadline,
     ExtractedDenial,
     Issue,
     LetterDraft,
+    NextLevel,
     PrecedentCite,
     Research,
     Review,
@@ -102,7 +104,9 @@ def classify(reason: str | None, codes: list[str], service: str | None, threshol
         "model": "Predicted from the wording of the denial reason by the denial-category model (M1).",
         "rules": "Matched keywords in the denial reason (fallback rules).",
     }[source]
-    return Classification(category=top, probability=round(float(p), 4), alternatives=alts, rationale=rationale, source=source, needs_user=needs_user, flagged_for_review=flagged)
+    return Classification.model_validate(
+        {"category": top, "probability": round(float(p), 4), "alternatives": alts, "rationale": rationale, "source": source, "needs_user": needs_user, "flagged_for_review": flagged}
+    )
 
 
 # ====================================================================== Research
@@ -213,8 +217,8 @@ def research(category: str, plan_type: str | None, service: str | None, reason: 
         rules=rules,
         precedents=precs,
         stats=stats,
-        deadlines=dls,
-        next_levels=nls,
+        deadlines=[Deadline.model_validate(d) for d in dls],
+        next_levels=[NextLevel.model_validate(n) for n in nls],
         arguments=[a["id"] for a in pb.get("legal", [])],
         evidence=pb.get("evidence", []),
         imr_type_prediction=m2_pred,
@@ -259,6 +263,11 @@ NON_BINDING_RE = re.compile(r"\bindependent reviewers? in similar\b.*\b(found|de
 TOKEN_RE = re.compile(r"\[([A-Z_]+)_(\d+)\]")
 
 
+class _Loc(TypedDict):
+    section_id: str
+    sentence_index: int
+
+
 def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_tokens: set[str], injection_flags: list[str] | None = None) -> Review:
     allowed = {r.cite_id: r for r in res.rules} | {p.cite_id: p for p in res.precedents}
     deadline_days = {str(d.days) for d in res.deadlines}
@@ -267,7 +276,7 @@ def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_token
     verdicts: list[SentenceVerdict] = []
     for sec in draft.sections:
         for i, s in enumerate(sec.sentences):
-            loc = {"section_id": sec.id, "sentence_index": i}
+            loc: _Loc = {"section_id": sec.id, "sentence_index": i}
             for pat, code in BANNED:
                 if pat.search(s.text):
                     blocking.append(Issue(code=code, message=f"Remove wording: '{pat.pattern}'", **loc))
