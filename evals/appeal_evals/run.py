@@ -115,11 +115,21 @@ def suite_retrieval() -> Suite:
     s = Suite("retrieval", "recall@5 >= 0.85 (production retrieval path)", blocking=not synthetic)
     if synthetic:
         s.notes.append("IMR data is the synthetic sample (CI mode): precedent questions cannot be answered; gate is non-blocking")
-    res = ablation(write=True)
+    from appeal_core.settings import get_settings
+
     from appeal_evals.retrieval import PRODUCTION
 
+    reranker = get_settings().reranker
+    res = ablation(write=True, production_reranker=reranker)
     best = res[PRODUCTION]["all"]
-    s.metrics = {"production": best, "ablation": {k: v["all"] for k, v in res.items()}}
+    s.metrics = {
+        "production": best,
+        "heldout_recall@5": (res[PRODUCTION].get("heldout") or {}).get("recall@5"),
+        "sealed_recall@5": (res[PRODUCTION].get("sealed") or {}).get("recall@5"),
+        "reranker": reranker,
+        "ablation": {k: v["all"] for k, v in res.items()},
+    }
+    s.notes.append("Gate is measured on the dev set (SPEC 17.2); held-out and sealed recall are the honest estimate (retrieval_ablation.md)")
     s.passed = best["recall@5"] >= 0.85
     return s
 

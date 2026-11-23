@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import text
 
 from appeal_core.db import get_engine
+from appeal_core.retrieval.reranker import get_reranker, rerank
 from appeal_core.retrieval.rrf import rrf
 
 _WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*")
@@ -20,11 +21,68 @@ def or_query(q: str) -> str:
     return " or ".join(words) if words else q
 
 
+_ASKS_DEFINITION = re.compile(r"\b(defin\w*|mean\w*|what (is|are|counts))\b", re.I)
+PROCEDURAL = {"deadlines", "external_review"}
+
+
+def _is_definitions(r: dict) -> bool:
+    return "definition" in (r.get("heading") or "").lower()
+
+
+def diversify_rules(ordered: list[dict], rows: dict, score: dict, query: str, k: int, required_ids: list[str]) -> list[dict]:
+    """SPEC 11.3 step 5 for rules.
+
+    - required ids (deadline basis chunks) always come first, so deadlines are citable;
+    - at least one procedural-rights chunk and exactly one rights summary are guaranteed, but forced items keep
+      their natural rank instead of being pinned to the top;
+    - at most one summary: summaries paraphrase the rules, and the Writer cites regulation paragraphs;
+    - "Definitions" sections go to the back unless the question asks what something means (they mention every
+      term, so they win keyword and vector matches without answering the question).
+    """
+    pool = list(ordered)
+    if not _ASKS_DEFINITION.search(query):
+        pool = [r for r in pool if not _is_definitions(r)] + [r for r in pool if _is_definitions(r)]
+    pos = {r["id"]: i for i, r in enumerate(pool)}
+    req: list[dict] = []
+    for rid in required_ids:
+        if rid in rows and rid not in [o["id"] for o in req]:
+            rr = dict(rows[rid])
+            rr["score"] = score.get(rid, 0.0)
+            req.append(rr)
+    chosen: dict[str, dict] = {}
+    if not any(set(o.get("topics") or []) & PROCEDURAL for o in req):
+        r = next((r for r in pool if set(r.get("topics") or []) & PROCEDURAL), None)
+        if r:
+            chosen[r["id"]] = r
+    has_summary = any(o["source_kind"] == "summary" for o in req)
+    if not has_summary:
+        r = next((r for r in pool if r["source_kind"] == "summary"), None)
+        if r:
+            chosen[r["id"]] = r
+            has_summary = True
+    req_ids = {o["id"] for o in req}
+    for r in pool:
+        if len(req) + len(chosen) >= k:
+            break
+        if r["id"] in req_ids or r["id"] in chosen:
+            continue
+        if r["source_kind"] == "summary" and has_summary:
+            continue
+        chosen[r["id"]] = r
+    rest = sorted(chosen.values(), key=lambda r: pos.get(r["id"], 1 << 30))
+    return (req + rest)[:k]
+
+
 class HybridRetriever:
-    def __init__(self, url: str | None = None, embedder=None, mode: str = "hybrid"):
+    def __init__(self, url: str | None = None, embedder=None, mode: str = "hybrid", reranker: str | None = None):
         self.url = url
         self._embedder = embedder
         self.mode = mode  # keyword | vector | hybrid
+        self.reranker_kind = reranker  # None = RERANKER setting; "none" | "crossencoder"
+
+    @property
+    def reranker(self):
+        return get_reranker(self.reranker_kind)
 
     @property
     def embedder(self):
@@ -99,32 +157,10 @@ class HybridRetriever:
         ordered = [rows[i] for i in ids if i in rows]
         for r in ordered:
             r["score"] = score.get(r["id"], 0.0)
+        ordered = rerank(self.reranker, queries[0], ordered, lambda r: f"{r.get('heading') or ''}. {r['text']}")
         if not diversify:
             return ordered[:k]
-        out: list[dict] = []
-        # required (e.g. deadline basis chunks) first, so deadlines are always citable
-        for rid in required_ids or []:
-            if rid in rows and rid not in [o["id"] for o in out]:
-                rr = dict(rows[rid])
-                rr["score"] = score.get(rid, 0.0)
-                out.append(rr)
-        procedural = {"deadlines", "external_review"}
-        if not any(set(o.get("topics") or []) & procedural for o in out):
-            for r in ordered:
-                if set(r.get("topics") or []) & procedural:
-                    out.append(r)
-                    break
-        if not any(o["source_kind"] == "summary" for o in out):
-            for r in ordered:
-                if r["source_kind"] == "summary":
-                    out.append(r)
-                    break
-        for r in ordered:
-            if len(out) >= k:
-                break
-            if r["id"] not in [o["id"] for o in out]:
-                out.append(r)
-        return out[:k]
+        return diversify_rules(ordered, rows, score, queries[0], k, required_ids or [])
 
     def _fetch_kb(self, ids: list[str]) -> dict[str, dict]:
         if not ids:
@@ -175,6 +211,7 @@ class HybridRetriever:
             r["rank_score"] = r["score"] + (bonus if diversify else 0.0)
             ordered.append(r)
         ordered.sort(key=lambda r: -r["rank_score"])
+        ordered = rerank(self.reranker, queries[0], ordered, lambda r: r["text"])
         if not diversify:
             return ordered[:k]
         out = ordered[: max(1, k - 1)]

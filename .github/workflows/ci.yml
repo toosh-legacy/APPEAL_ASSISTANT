@@ -7,6 +7,8 @@ on:
 jobs:
   python:
     runs-on: ubuntu-latest
+    env:
+      RERANKER: none  # skip the cross-encoder download in CI; retrieval gate is non-blocking on the synthetic IMR sample
     services:
       postgres:
         image: pgvector/pgvector:pg16

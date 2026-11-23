@@ -50,39 +50,47 @@
   }
  },
  "retrieval": {
-  "passed": false,
+  "passed": true,
   "gate": "recall@5 >= 0.85 (production retrieval path)",
   "metrics": {
    "production": {
-    "recall@5": 0.828,
-    "mrr": 0.7855,
-    "ndcg@10": 0.7573
+    "recall@5": 0.8545,
+    "mrr": 0.9009,
+    "ndcg@10": 0.863
    },
+   "heldout_recall@5": 0.7065,
+   "sealed_recall@5": 0.7553,
+   "reranker": "crossencoder",
    "ablation": {
     "keyword only": {
-     "recall@5": 0.5957,
-     "mrr": 0.7116,
-     "ndcg@10": 0.6384
+     "recall@5": 0.6109,
+     "mrr": 0.7184,
+     "ndcg@10": 0.652
     },
     "vector only": {
-     "recall@5": 0.6722,
-     "mrr": 0.776,
-     "ndcg@10": 0.706
+     "recall@5": 0.7056,
+     "mrr": 0.8139,
+     "ndcg@10": 0.7376
     },
     "hybrid RRF": {
-     "recall@5": 0.7742,
-     "mrr": 0.8076,
-     "ndcg@10": 0.7632
+     "recall@5": 0.8045,
+     "mrr": 0.8496,
+     "ndcg@10": 0.7939
     },
     "hybrid RRF + query rewriting": {
-     "recall@5": 0.8043,
-     "mrr": 0.8188,
-     "ndcg@10": 0.7679
+     "recall@5": 0.8376,
+     "mrr": 0.8609,
+     "ndcg@10": 0.8005
     },
-    "hybrid RRF + rewriting + diversification (production)": {
-     "recall@5": 0.828,
-     "mrr": 0.7855,
-     "ndcg@10": 0.7573
+    "hybrid RRF + rewriting + diversification": {
+     "recall@5": 0.8346,
+     "mrr": 0.8609,
+     "ndcg@10": 0.8094
+    },
+    "hybrid RRF + rewriting + diversification + cross-encoder rerank (production)": {
+     "recall@5": 0.8545,
+     "mrr": 0.9009,
+     "ndcg@10": 0.863
     }
    }
   }
@@ -91,7 +99,7 @@
   "passed": true,
   "gate": "100% of cited IDs exist in the case's retrieval set",
   "metrics": {
-   "citations": 462,
+   "citations": 476,
    "invalid": 0,
    "validity": 1.0
   }
@@ -100,8 +108,8 @@
   "passed": true,
   "gate": "deterministic checker marks >= 95% of cited sentences supported",
   "metrics": {
-   "cited_sentences": 462,
-   "supported": 462,
+   "cited_sentences": 476,
+   "supported": 476,
    "rate": 1.0
   }
  },
@@ -109,9 +117,9 @@
   "passed": true,
   "gate": "100% of P-citing sentences use non-binding wording",
   "metrics": {
-   "precedent_sentences": 147,
-   "non_binding": 147,
-   "letters_citing_precedents": 100
+   "precedent_sentences": 139,
+   "non_binding": 139,
+   "letters_citing_precedents": 96
   }
  },
  "red_team": {
@@ -129,7 +137,7 @@
   "passed": true,
   "gate": "0 raw identifiers in captured provider inputs",
   "metrics": {
-   "payloads_checked": 608,
+   "payloads_checked": 575,
    "raw_identifier_hits": 0,
    "leak_gate_blocks": 0,
    "cases": 190
@@ -139,8 +147,8 @@
   "passed": true,
   "gate": "p50 seconds per case <= 10 (offline providers)",
   "metrics": {
-   "p50_s": 0.729,
-   "p95_s": 0.939,
+   "p50_s": 5.303,
+   "p95_s": 6.32,
    "n": 120,
    "statuses": {
     "READY": 120

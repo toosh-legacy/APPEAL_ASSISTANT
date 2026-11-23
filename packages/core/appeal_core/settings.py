@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     llm_provider: str = "offline"
     embedder: str = "minilm"
     retriever_backend: str = "postgres"
+    reranker: str = "crossencoder"  # crossencoder | none (CI: none, avoids the model download)
     pii_backend: str = "local"
     injection_backend: str = "local"
     ocr_backend: str = "local"

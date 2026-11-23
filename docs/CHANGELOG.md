@@ -58,3 +58,11 @@
 - One trace per case: W3C trace context is stored in the job payload by the API and continued by the worker (`job.*` → `agent.*` spans). Tested.
 - `/admin/v1/metrics`: p50 latency per agent, revisions per case, NEEDS_HUMAN rate, ask-user rate, leak-gate blocks, injection detections, cost per case.
 - Hypothesis property tests for deadline math and .ics; text-PDF upload path test (SAS PUT → Azurite → pypdf → intake).
+
+## Phase B · Retrieval quality (developer present)
+- Re-downloaded all SPEC 9 datasets from scratch: byte-identical to the overnight copies.
+- Retrieval gold v2 labels (alternative phrases, DMHC subcategory families), held-out set (28 q) and sealed set (19 q); ablation reports dev / held-out / sealed.
+- Diversification: forced items keep their rank, one rights summary, Definitions sections demoted.
+- Optional local cross-encoder reranker (`RERANKER=crossencoder`, default; CI uses `none`).
+- Retrieval gate passes on dev (0.855); held-out 0.707, sealed 0.755. Budget p50 5.3 s (was 0.65 s).
+
