@@ -22,7 +22,7 @@ from sklearn.metrics import f1_score, recall_score
 ROOT = Path(__file__).resolve().parents[2]
 GOLD = ROOT / "evals" / "gold"
 REPORTS = ROOT / "evals" / "reports"
-FIELDS = ["insurer", "plan_type", "state", "claim_number", "member_id", "service", "date_of_service", "notice_date", "denial_codes"]
+FIELDS = ["insurer", "plan_type", "state", "claim_number", "member_id", "service", "date_of_service", "notice_date", "denial_reason", "denial_codes"]
 
 
 def jl(name: str) -> list[dict]:
@@ -58,7 +58,7 @@ def suite_extraction(runs: list[dict]) -> Suite:
     for f in FIELDS:
         ok = 0
         for r in runs:
-            exp = r["g"]["label"]["fields"][f]
+            exp = r["g"]["label"]["reason_text"] if f == "denial_reason" else r["g"]["label"]["fields"][f]
             got = r["vals"].get(f)
             if f == "denial_codes":
                 ok += sorted(got or []) == sorted(exp)
@@ -365,7 +365,7 @@ def main() -> int:
     rt = jl("redteam.jsonl")
     probes = jl("privacy_probes.jsonl")
     if fast:
-        gold, rt, probes = gold[::4], rt[::4], probes[::3]
+        gold, rt, probes = gold[::3], rt[::4], probes[::3]  # ::3 covers all 8 categories
     suites: list[Suite] = []
     intake_runs = run_intake(gold)
     suites += [suite_extraction(intake_runs), suite_classification(intake_runs), suite_deadlines(intake_runs)]

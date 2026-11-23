@@ -56,3 +56,4 @@ One line each: **decision** — reason — alternative considered.
 - **Insurer insights flag turned on (`FEATURE_INSURER_INSIGHTS=true`) because D3 loaded** — SPEC fallback hides it only when D3 fails — keep hidden.
 - **`data/processed/imr.parquet` untracked after the fact (it was committed in phase 1, 57 MB)** — reproducible with `make data`; big binaries do not belong in git. History was NOT rewritten (destructive); squash or `git filter-repo` it before the first push — rewrite history overnight.
 - **Leak gate matches short raw values (< 8 chars) as whole tokens only** — found by the CI simulation: ZIP '00000' falsely matched 'SYN00000' and blocked the writer — substring matching for all values.
+- **Extraction eval now scores denial_reason too** — a mobile screenshot showed 'code(s): CO-50' extracted as the reason (the 'reason' label matched 'Adjustment reason code(s)'); the field was not scored, so the eval said 100% — score only identifiers.

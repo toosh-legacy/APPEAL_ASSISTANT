@@ -133,7 +133,9 @@ def offline_extract(text: str) -> dict[str, Any]:
                 break
     f["notice_date"] = _fv(nd, conf)
 
-    reason = _labelled(text, r"reason for (?:the )?denial|reason|denial reason")
+    # label must start the line and be followed by ':' (so "Adjustment reason code(s): CO-50" is not a reason)
+    m = re.search(r"(?im)^\s*(?:reason for (?:the )?denial|denial reason|reason)\s*:\s*(.+?)\s*$", text)
+    reason = m.group(1).strip() if m else None
     conf = 0.9 if reason else 0.0
     if not reason:
         m = re.search(r"(?im)^summary of (?:our|the) decision\s*\n(.+)$", text)
