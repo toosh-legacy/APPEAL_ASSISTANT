@@ -1,0 +1,10 @@
+# azd project (Phase C only). Do not run `azd up` during Phases A/B.
+name: appeal-assistant
+infra:
+  provider: bicep
+  path: .
+  module: main
+services:
+  api: { project: ../services/api, host: containerapp, language: python }
+  worker: { project: ../services/worker, host: containerapp, language: python }
+  web: { project: ../apps/web, host: containerapp, language: ts }

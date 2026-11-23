@@ -42,3 +42,8 @@
 - 40 red-team letters (ignore-previous, fake system tags, hidden footer comments, other users' data, threats/false claims, base64, claims-processor notes, zero-width characters, ...) and 30 privacy probes (split IDs, initials, middle initials, phone formats, emails, DOB, MRN, SSN) in `evals/gold/`.
 - Results: all gates pass except retrieval recall@5 (0.804 vs 0.85; logged in BLOCKERS). Red team 0/40 failures; privacy 0 raw identifiers in 621 captured provider inputs.
 - CI: `--ci` data mode (synthetic IMR sample + LSA embeddings) so the fast evals run without the 85 MB download.
+
+## Phase 7 · Phase C preparation (no cloud calls)
+- `infra/README.md` mapping every SPEC 7.2 resource to its Bicep module, the local adapter it replaces, the switch and the env vars; 19 stub modules + `main.bicep`, parameters per environment, `azure.yaml` (nothing deployed).
+- Azure adapter classes raise `NotConfigured` naming the missing variables; `tests/test_azure_contracts.py` checks every switch fails clearly without credentials and skips live contract tests.
+- ADR skeletons (`docs/adr/`) and the STRIDE threat model (`docs/threat-model.md`).
