@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RERANKER: none  # skip the cross-encoder download in CI; retrieval gate is non-blocking on the synthetic IMR sample
+      LLM_PROVIDER: offline  # LangChain fake chat model: CI never calls a hosted model and needs no key
+      LANGSMITH_TRACING: "false"
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -20,7 +22,7 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U appeal" --health-interval 5s --health-timeout 5s --health-retries 20
       redis:
-        image: redis:7-alpine
+        image: redis/redis-stack-server:7.4.0-v3
         ports: ["56379:6379"]
       azurite:
         image: mcr.microsoft.com/azure-storage/azurite
