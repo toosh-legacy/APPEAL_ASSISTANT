@@ -68,3 +68,30 @@ jobs:
       - name: Generated API types are up to date
         run: npx openapi-typescript ../../packages/schemas/openapi.json -o /tmp/api-types.ts && diff -q /tmp/api-types.ts src/lib/api-types.ts
       - run: npm run build
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks (whole history)
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.2 detect --source /repo --config /repo/.gitleaks.toml --redact --no-banner
+
+  redteam:
+    runs-on: ubuntu-latest
+    env:
+      LLM_PROVIDER: offline
+      LANGSMITH_TRACING: "false"
+      PROMPTFOO_DISABLE_TELEMETRY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.12
+      - run: uv sync --extra nlp
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: promptfoo prompt-injection suite (40 attacks, offline chat model)
+        working-directory: evals/promptfoo
+        run: PROMPTFOO_PYTHON="$GITHUB_WORKSPACE/.venv/bin/python" npx -y promptfoo@0.118.0 eval -c promptfooconfig.yaml --no-cache --no-progress-bar -o results.json

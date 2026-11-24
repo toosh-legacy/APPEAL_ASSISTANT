@@ -1,0 +1,14 @@
+# gitleaks: blocks secrets in commits (pre-commit hook) and in history (CI).
+title = "appeal-assistant"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public, documented placeholders that are not secrets"
+regexes = [
+  # Azurite's well-known development account key, published by Microsoft for the local emulator
+  '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
+  # obviously fake keys used in unit tests
+  '''sk-test-not-a-real-key-0+''',
+]
