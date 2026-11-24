@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import statistics
 import sys
 import time
@@ -128,7 +129,7 @@ def suite_retrieval() -> Suite:
     from appeal_evals.retrieval import PRODUCTION
 
     reranker = get_settings().reranker
-    res = ablation(write=True, production_reranker=reranker)
+    res = ablation(write=True, production_reranker=reranker, include_bge=reranker != "none")  # CI skips model downloads
     best = res[PRODUCTION]["all"]
     s.metrics = {
         "production": best,
@@ -169,12 +170,12 @@ def run_pipeline(letters: list[dict], tag: str) -> list[dict]:
             s.add(TokenVault(case_id=cid, wrapped_data_key=wrapped, encrypted_map=encrypt(dk, "{}", "tokenmap")))
         err = None
         try:
-            orch.ingest(cid)
+            orch.run_graph(cid, "case.ingest")
             with session_scope() as s:
                 c = s.get(Case, cid)
                 if c.status == Status.AWAITING_CONFIRMATION:
                     transition(s, c, Status.CLASSIFYING, actor="eval")
-            orch.draft(cid)
+            orch.run_graph(cid, "case.draft")
             with session_scope() as s:
                 c = s.get(Case, cid)
                 if c.status == Status.NEEDS_CATEGORY:
@@ -183,7 +184,7 @@ def run_pipeline(letters: list[dict], tag: str) -> list[dict]:
                     cls = s.scalar(select(AgentRun).where(AgentRun.case_id == cid, AgentRun.agent == "classifier"))
                     c.category = cls.output["category"]
                     transition(s, c, Status.RESEARCHING, actor="eval")
-            orch.draft(cid)
+            orch.run_graph(cid, "case.draft")
         except Exception as e:  # leak gate blocks etc. are recorded, not hidden
             err = f"{type(e).__name__}: {e}"
         secs = time.perf_counter() - t0
@@ -260,11 +261,12 @@ def suite_precedent_wording(runs: list[dict]) -> Suite:
     return s
 
 
-def suite_budget(runs: list[dict]) -> Suite:
-    s = Suite("budget", "p50 seconds per case <= 10 (offline providers)")
+def suite_budget(runs: list[dict], live: bool = False) -> Suite:
+    limit = 30 if live else 10
+    s = Suite("budget", f"p50 seconds per case <= {limit} ({'hosted models' if live else 'offline providers'})")
     secs = sorted(r["seconds"] for r in runs)
     s.metrics = {"p50_s": round(statistics.median(secs), 3), "p95_s": round(secs[int(0.95 * (len(secs) - 1))], 3), "n": len(secs), "statuses": {st: sum(r["status"] == st for r in runs) for st in {r["status"] for r in runs}}}
-    s.passed = s.metrics["p50_s"] <= 10
+    s.passed = s.metrics["p50_s"] <= limit
     return s
 
 
@@ -337,7 +339,41 @@ def suite_privacy(all_runs: list[dict]) -> Suite:
 
 
 # ------------------------------------------------------------------ report
-def write(suites: list[Suite], fast: bool) -> None:
+def suite_llm_cost(n_cases: int, budget_per_case: float = 0.10) -> Suite:
+    """Live runs: spend, cache hit rate and cost saved from the LiteLLM gateway ledger for this session."""
+    from appeal_core.llm.cost import get_ledger
+
+    s = Suite("llm_cost", f"cost per case <= ${budget_per_case:.2f}; session spend under its hard cap")
+    led = get_ledger().summary()
+    per_case = led["usd"] / max(1, n_cases)
+    s.metrics = {
+        "usd_total": round(led["usd"], 4),
+        "usd_per_case": round(per_case, 5),
+        "usd_per_1000_cases": round(per_case * 1000, 2),
+        "calls": led["calls"],
+        "tokens_in": led["tokens_in"],
+        "tokens_out": led["tokens_out"],
+        "cache_lookups": led["cache_lookups"],
+        "cache_hits": led["cache_hits"],
+        "cache_hit_rate": led["cache_hit_rate"],
+        "usd_saved_by_cache": round(led["usd_saved"], 5),
+        "session": led["session"],
+        "budget_usd": led["budget_usd"],
+    }
+    s.passed = per_case <= budget_per_case and led["usd"] < led["budget_usd"]
+    return s
+
+
+def suite_ragas(pipe: list[dict], limit: int) -> Suite:
+    from appeal_evals.ragas_eval import evaluate_runs
+
+    s = Suite("ragas", "faithfulness >= 0.80 (reported: answer relevancy, context precision, context recall)", blocking=False)
+    s.metrics = evaluate_runs(pipe, limit)
+    s.passed = (s.metrics.get("faithfulness") or 0) >= 0.80
+    return s
+
+
+def write(suites: list[Suite], fast: bool, live: bool = False) -> None:
     from appeal_core.db import session_scope
     from appeal_core.llm.base import prompt_versions
     from appeal_core.models import EvalRun
@@ -348,7 +384,7 @@ def write(suites: list[Suite], fast: bool) -> None:
     lines = [
         "# Evaluation report (latest)",
         "",
-        f"Mode: {'fast subset' if fast else 'full'} · git {sha[:10]} · LLM provider: offline · prompts {prompt_versions()} · models {pinned()}",
+        f"Mode: {'live (OpenAI via LiteLLM)' if live else ('fast subset' if fast else 'full')} · git {sha[:10]} · LLM provider: {provider_label()} · prompts {prompt_versions()} · models {pinned()}",
         "",
         "| Suite | Gate | Result | Key metrics |",
         "|---|---|---|---|",
@@ -362,8 +398,9 @@ def write(suites: list[Suite], fast: bool) -> None:
     rt = next((s for s in suites if s.name == "retrieval"), None)
     if rt:
         lines += ["", "## Retrieval ablation", "", "See `evals/reports/retrieval_ablation.md`."]
-    (REPORTS / ("latest.md" if not fast else "latest_fast.md")).write_text("\n".join(lines) + "\n", encoding="utf-8")
-    (REPORTS / ("latest.json" if not fast else "latest_fast.json")).write_text(json.dumps({s.name: {"passed": s.passed, "gate": s.gate, "metrics": s.metrics} for s in suites}, indent=1, default=str), encoding="utf-8")
+    stem = "latest_live" if live else ("latest_fast" if fast else "latest")
+    (REPORTS / f"{stem}.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (REPORTS / f"{stem}.json").write_text(json.dumps({s.name: {"passed": s.passed, "gate": s.gate, "metrics": s.metrics} for s in suites}, indent=1, default=str), encoding="utf-8")
     try:
         with session_scope() as db:
             for s in suites:
@@ -372,18 +409,42 @@ def write(suites: list[Suite], fast: bool) -> None:
         print(f"(could not write eval_run rows: {type(e).__name__})")
 
 
+def provider_label() -> str:
+    from appeal_core.settings import get_settings
+
+    s = get_settings()
+    if s.llm_provider != "openai":
+        return "offline (LangChain fake chat model)"
+    return f"openai via LiteLLM (fast {s.openai_model_fast}, strong {s.openai_model_strong}, embeddings {s.openai_embedding_model})"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--fast", action="store_true")
+    ap.add_argument("--live", action="store_true", help="real OpenAI calls (needs LLM_PROVIDER=openai); adds llm_cost + ragas")
+    ap.add_argument("--limit", type=int, help="evenly spaced sample of the gold letters (live runs are budget-capped)")
+    ap.add_argument("--no-ragas", action="store_true")
     a = ap.parse_args()
     fast = a.fast and not a.all
+    if a.live:
+        from appeal_core.settings import get_settings
+
+        if get_settings().llm_provider != "openai":
+            print("--live needs LLM_PROVIDER=openai (use `make eval-live`)")
+            return 2
+        os.environ.setdefault("LLM_SESSION", f"eval-live-{time.strftime('%Y%m%d-%H%M%S')}")
     t0 = time.time()
     gold = jl("letters.jsonl")
     rt = jl("redteam.jsonl")
     probes = jl("privacy_probes.jsonl")
     if fast:
         gold, rt, probes = gold[::3], rt[::4], probes[::3]  # ::3 covers all 8 categories
+    if a.limit:
+        step = max(1, len(gold) // a.limit)
+        gold = gold[::step][: a.limit]
+        n_side = max(1, a.limit // 4)
+        rt, probes = rt[:: max(1, len(rt) // n_side)][:n_side], probes[:n_side]
     suites: list[Suite] = []
     intake_runs = run_intake(gold)
     suites += [suite_extraction(intake_runs), suite_classification(intake_runs), suite_deadlines(intake_runs)]
@@ -399,8 +460,12 @@ def main() -> int:
     suites.append(suite_redteam(clean, rt_runs))
     probe_runs = run_pipeline(probes, "privacy")
     suites.append(suite_privacy(pipe + rt_runs + probe_runs))
-    suites.append(suite_budget(pipe))
-    write(suites, fast)
+    suites.append(suite_budget(pipe, live=a.live))
+    if a.live:
+        suites.append(suite_llm_cost(len(pipe) + len(rt_runs) + len(probe_runs)))
+        if not a.no_ragas:
+            suites.append(suite_ragas(pipe, limit=min(15, len(pipe))))
+    write(suites, fast, live=a.live)
     for s in suites:
         print(f"{'PASS' if s.passed else 'FAIL'}  {s.name:18s} {json.dumps({k: v for k, v in s.metrics.items() if k not in ('failure_detail', 'ablation')})[:300]}")
     print(f"evals finished in {time.time() - t0:.0f}s")

@@ -61,32 +61,47 @@ def load_set(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-PRODUCTION = "hybrid RRF + rewriting + diversification + cross-encoder rerank (production)"
+PRODUCTION = "hybrid RRF + rewriting + diversification + MiniLM cross-encoder rerank (offline production)"
 NO_RERANK = "hybrid RRF + rewriting + diversification"
-# (name, mode, rewrite, diversify, reranker)
+BGE = "hybrid RRF + rewriting + diversification + bge-reranker-base rerank"
+OPENAI_NO_RERANK = "OpenAI embeddings: hybrid RRF + rewriting + diversification"
+OPENAI_BGE = "OpenAI embeddings: hybrid RRF + rewriting + diversification + bge-reranker-base rerank (live production)"
+# (name, mode, rewrite, diversify, reranker, vectors)
 CONFIGS = [
-    ("keyword only", "keyword", False, False, "none"),
-    ("vector only", "vector", False, False, "none"),
-    ("hybrid RRF", "hybrid", False, False, "none"),
-    ("hybrid RRF + query rewriting", "hybrid", True, False, "none"),
-    (NO_RERANK, "hybrid", True, True, "none"),
-    (PRODUCTION, "hybrid", True, True, "crossencoder"),
+    ("keyword only", "keyword", False, False, "none", "local"),
+    ("vector only (MiniLM)", "vector", False, False, "none", "local"),
+    ("vector only (OpenAI text-embedding-3-small)", "vector", False, False, "none", "openai"),
+    ("hybrid RRF", "hybrid", False, False, "none", "local"),
+    ("hybrid RRF + query rewriting", "hybrid", True, False, "none", "local"),
+    (NO_RERANK, "hybrid", True, True, "none", "local"),
+    (PRODUCTION, "hybrid", True, True, "crossencoder", "local"),
+    (BGE, "hybrid", True, True, "bge", "local"),
+    (OPENAI_NO_RERANK, "hybrid", True, True, "none", "openai"),
+    (OPENAI_BGE, "hybrid", True, True, "bge", "openai"),
 ]
-# Held-out sets are only run for the two production-like rows (keeps `make eval` time reasonable).
-HELDOUT_ROWS = {NO_RERANK, PRODUCTION}
+# Held-out sets are only run for the production-like rows (keeps `make eval` time reasonable).
+HELDOUT_ROWS = {NO_RERANK, PRODUCTION, BGE, OPENAI_NO_RERANK, OPENAI_BGE}
 
 
-def ablation(url: str | None = None, write: bool = True, production_reranker: str | None = None) -> dict:
+def ablation(url: str | None = None, write: bool = True, production_reranker: str | None = None, include_openai: bool | None = None, include_bge: bool = True) -> dict:
     """Returns {config: {"all"|"rules"|"precedents": metrics, "heldout": metrics|None, "sealed": metrics|None}}.
 
     production_reranker overrides the reranker of the production row (CI passes "none": no model download)."""
     gold, held, sealed = load_gold(), load_set(HELDOUT), load_set(SEALED)
     results: dict[str, dict] = {}
     per_best = None
-    for name, mode, rw, div, rr in CONFIGS:
+    from appeal_core.retrieval.vectorstore import openai_vectors_enabled
+
+    if include_openai is None:
+        include_openai = openai_vectors_enabled()
+    for name, mode, rw, div, rr, vec in CONFIGS:
+        if vec == "openai" and not include_openai:
+            continue  # needs the key and the PGVector index; offline runs (CI, `make eval`) skip these rows
+        if rr == "bge" and not include_bge:
+            continue
         if name == PRODUCTION and production_reranker:
             rr = production_reranker
-        retr = HybridRetriever(url=url, reranker=rr)
+        retr = HybridRetriever(url=url, reranker=rr, vectors=vec)
         agg, per = run_config(retr, gold, mode, rw, div)
         if name in HELDOUT_ROWS:
             agg["heldout"] = run_config(retr, held, mode, rw, div)[0]["all"] if held else None
@@ -135,12 +150,12 @@ def _write_report(results: dict, gold: list[dict], held: list[dict], sealed: lis
         "- Diversification (SPEC 11.3 step 5): required deadline chunks first; at least one procedural-rights chunk and exactly one "
         "rights summary, kept at their natural rank; 'Definitions' sections moved back unless the question asks what something means; "
         "both outcomes and same-subcategory/recent cases for precedents.",
-        "- Reranker: cross-encoder/ms-marco-MiniLM-L-6-v2 (local, CPU) reorders the top 30 fused candidates by the user's query. "
-        "Top-30 was fixed before measuring, not tuned. Costs about 1 s per search on a laptop CPU.",
+        "- Rerankers reorder the top 30 fused candidates by the user's query (top-30 fixed before measuring): "
+        "cross-encoder/ms-marco-MiniLM-L-6-v2 (~90 MB) and BAAI/bge-reranker-base (~1.1 GB), both local on CPU.",
+        "- OpenAI rows: text-embedding-3-small (1536-d) vectors in langchain-postgres PGVector, query embeddings via the LiteLLM gateway "
+        "(exact Redis cache). They appear only when the run has the key and the index (`make eval-live`, `appeal_data.embed_openai`).",
         "- Precedent questions are answered without metadata filters here; in the product, Research also filters by the treatment "
         "category inferred from the service.",
-        "",
-        "Phase C will add a row: Azure AI Search hybrid + semantic ranker.",
         "",
         "## Misses (production config, dev set, recall@5 < 1)",
         "",

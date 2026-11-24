@@ -1,8 +1,11 @@
 """Optional second-stage reranker (SPEC 11.3, BLOCKERS "retrieval recall@5").
 
-A local cross-encoder (cross-encoder/ms-marco-MiniLM-L-6-v2, ~90 MB, CPU, no key) reads (query, passage)
-pairs and reorders the top-N fused candidates. Selected with RERANKER=crossencoder; the default is
-`none`. If the model cannot be loaded, retrieval silently keeps the RRF order (no hard dependency).
+A local cross-encoder reads (query, passage) pairs and reorders the top-N RRF-fused candidates:
+- RERANKER=bge: BAAI/bge-reranker-base (~1.1 GB, CPU)
+- RERANKER=crossencoder: cross-encoder/ms-marco-MiniLM-L-6-v2 (~90 MB, CPU)
+- RERANKER=none: keep the RRF order (CI)
+Both are compared in evals/reports/retrieval_ablation.md. If a model cannot be loaded, retrieval keeps the
+RRF order (no hard dependency).
 """
 
 from __future__ import annotations
@@ -13,16 +16,17 @@ from functools import lru_cache
 log = logging.getLogger(__name__)
 
 MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+BGE_MODEL = "BAAI/bge-reranker-base"
 TOP_N = 30  # fixed up front, not tuned on the gold set
 
 
 class CrossEncoderReranker:
     name = "crossencoder"
 
-    def __init__(self) -> None:
+    def __init__(self, model_name: str = MODEL_NAME) -> None:
         from sentence_transformers import CrossEncoder
 
-        self.model = CrossEncoder(MODEL_NAME, device="cpu")
+        self.model = CrossEncoder(model_name, device="cpu", max_length=512)
 
     def scores(self, query: str, passages: list[str]) -> list[float]:
         if not passages:
@@ -39,9 +43,9 @@ def get_reranker(kind: str | None = None):
         kind = get_settings().reranker
     if kind in ("", "none", None):
         return None
-    if kind == "crossencoder":
+    if kind in ("crossencoder", "bge"):
         try:
-            return CrossEncoderReranker()
+            return CrossEncoderReranker(BGE_MODEL if kind == "bge" else MODEL_NAME)
         except Exception as e:  # model missing / offline: keep RRF order
             log.warning("reranker unavailable, using RRF order: %s", type(e).__name__)
             return None

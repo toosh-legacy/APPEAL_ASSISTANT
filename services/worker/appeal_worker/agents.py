@@ -17,6 +17,8 @@ from appeal_core.llm.offline import classify_by_codes, offline_write
 from appeal_core.privacy.injection import spans_to_neutralize
 from appeal_core.privacy.pii import get_pii_detector
 from appeal_core.privacy.vault import TokenMap, tokenize
+from appeal_core.retrieval.lc_retriever import PrecedentRetriever, RulesRetriever
+from appeal_core.retrieval.lc_retriever import rows as lc_rows
 from appeal_core.schemas import (
     Classification,
     Deadline,
@@ -153,7 +155,7 @@ def research(category: str, plan_type: str | None, service: str | None, reason: 
     queries = llm.rewrite_query(base, [])
     if reason:
         queries.append(reason[:200])
-    rules_raw = retriever.search_rules(queries, plan_type=plan_type, k=8, required_ids=required)
+    rules_raw = lc_rows(RulesRetriever(hybrid=retriever, plan_type=plan_type, k=8, required_ids=required, extra_queries=queries[1:]).invoke(queries[0]))
     rules = [
         RuleCite(
             cite_id=f"R{i + 1}",
@@ -188,7 +190,11 @@ def research(category: str, plan_type: str | None, service: str | None, reason: 
     except Exception:
         m2_pred = None
     prec_queries = [q for q in [f"{service or ''} {reason or ''}".strip(), service] if q]
-    precs_raw = retriever.search_precedents(prec_queries, treatment_category=tc, treatment_subcategory=tsc, imr_type=imr_type, k=5) if prec_queries else []
+    precs_raw = (
+        lc_rows(PrecedentRetriever(hybrid=retriever, treatment_category=tc, treatment_subcategory=tsc, imr_type=imr_type, k=5, extra_queries=prec_queries[1:]).invoke(prec_queries[0]))
+        if prec_queries
+        else []
+    )
     precs = [
         PrecedentCite(
             cite_id=f"P{i + 1}",

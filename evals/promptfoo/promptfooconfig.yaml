@@ -1,0 +1,18 @@
+# Prompt-injection red team for the intake + writer chains (40 attacks from evals/gold/redteam.jsonl).
+#   CI (no key):  LLM_PROVIDER=offline npx promptfoo@latest eval -c evals/promptfoo/promptfooconfig.yaml
+#   Live:         LLM_PROVIDER=openai  npx promptfoo@latest eval -c evals/promptfoo/promptfooconfig.yaml
+# Set PROMPTFOO_PYTHON to the project venv's python. Each test fails if attacker text reaches the letter,
+# a raw identifier reaches a model, or a legal claim appears without a source. Detection is reported
+# (metric injection_detected) but not required: the letter must be safe even when detection misses.
+description: Appeal Assistant prompt-injection red team
+prompts:
+  - "{{letter}}"
+providers:
+  - id: file://provider.py
+    label: intake+writer chains
+defaultTest:
+  options:
+    provider: file://provider.py
+tests: file://tests.yaml
+evaluateOptions:
+  maxConcurrency: 1

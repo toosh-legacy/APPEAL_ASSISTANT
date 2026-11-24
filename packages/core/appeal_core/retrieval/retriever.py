@@ -74,11 +74,13 @@ def diversify_rules(ordered: list[dict], rows: dict, score: dict, query: str, k:
 
 
 class HybridRetriever:
-    def __init__(self, url: str | None = None, embedder=None, mode: str = "hybrid", reranker: str | None = None):
+    def __init__(self, url: str | None = None, embedder=None, mode: str = "hybrid", reranker: str | None = None, vectors: str | None = None):
         self.url = url
         self._embedder = embedder
         self.mode = mode  # keyword | vector | hybrid
-        self.reranker_kind = reranker  # None = RERANKER setting; "none" | "crossencoder"
+        self.reranker_kind = reranker  # None = RERANKER setting; "none" | "crossencoder" | "bge"
+        self._query_embedder: Any = None
+        self.vectors = vectors  # None = settings; "local" (MiniLM columns) | "openai" (PGVector, text-embedding-3-small)
 
     @property
     def reranker(self):
@@ -104,6 +106,10 @@ class HybridRetriever:
             return [r[0] for r in c.execute(text(sql), {"q": or_query(q), "lim": limit, **params})]
 
     def _vec(self, table: str, q: str, where: str, params: dict, limit: int = 50) -> list[str]:
+        from appeal_core.retrieval.vectorstore import openai_vectors_enabled
+
+        if (self.vectors == "openai") if self.vectors else openai_vectors_enabled():
+            return self._vec_openai(table, q, where, params, limit)
         vec = self.embedder.embed([q])[0]
         lit = "[" + ",".join(f"{x:.6f}" for x in vec) + "]"
         sql = f"""
@@ -115,6 +121,27 @@ class HybridRetriever:
         with get_engine(self.url).connect() as c:
             c.execute(text("SET LOCAL hnsw.ef_search = 100"))
             return [r[0] for r in c.execute(text(sql), {"v": lit, "lim": limit, **params})]
+
+    def _vec_openai(self, table: str, q: str, where: str, params: dict, limit: int) -> list[str]:
+        """text-embedding-3-small via the gateway (cached per query) -> PGVector; SQL filters applied after."""
+        from appeal_core.llm.gateway import GatewayEmbeddings
+        from appeal_core.retrieval.vectorstore import get_vector_store
+
+        if self._query_embedder is None:
+            self._query_embedder = GatewayEmbeddings()
+        vec = self._query_embedder.embed_query(q)
+        meta = {}
+        if "tc" in params:
+            meta["treatment_category"] = {"$eq": params["tc"]}
+        if "ty" in params:
+            meta["type"] = {"$eq": params["ty"]}
+        hits = get_vector_store(table, self.url).search(vec, k=limit * 3 if where else limit, filter=meta or None)
+        ids = [i for i, _ in hits]
+        if not where or not ids:
+            return ids[:limit]
+        with get_engine(self.url).connect() as c:
+            keep = {r[0] for r in c.execute(text(f"SELECT id FROM {table} WHERE id = ANY(:ids) {where}"), {"ids": ids, **params})}
+        return [i for i in ids if i in keep][:limit]
 
     def _ranked(self, table: str, queries: list[str], where: str, params: dict, mode: str | None = None) -> list[tuple[str, float]]:
         mode = mode or self.mode
