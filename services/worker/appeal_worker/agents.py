@@ -73,7 +73,7 @@ def rule_scores(reason: str) -> dict[str, float]:
     return {c: v / tot for c, v in sc.items()}
 
 
-def classify(reason: str | None, codes: list[str], service: str | None, threshold: float | None = None, raw_values: list[str] | None = None) -> Classification:
+def classify(reason: str | None, codes: list[str], service: str | None, threshold: float | None = None, raw_values: list[str] | None = None, letter: str | None = None) -> Classification:
     threshold = get_settings().classifier_threshold if threshold is None else threshold
     reason = reason or ""
     probs: dict[str, float] | None = None
@@ -108,7 +108,7 @@ def classify(reason: str | None, codes: list[str], service: str | None, threshol
     if p < threshold and source != "denial_code" and reason:
         # M1 is unsure: ask the cheap-tier LLM; accept it only when it is at least as confident as the threshold
         try:
-            got = get_llm().classify(reason, codes, service, raw_values or [])
+            got = get_llm().classify(reason, codes, service, raw_values or [], letter=letter)
             if got.confidence >= threshold:
                 top, p, source, rationale = got.category, got.confidence, "llm", got.rationale
         except ProviderUnavailable:
@@ -317,8 +317,10 @@ def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_token
                 for c in s.citations:
                     src = allowed[c]
                     passages.append(src.text if isinstance(src, RuleCite) else src.excerpt)
-                    if isinstance(src, RuleCite) and src.heading:
-                        passages.append(src.heading)
+                    if isinstance(src, RuleCite):
+                        passages.append(src.citation_path)  # "29 CFR 2560.503-1(h)" in a sentence is not an invented number
+                        if src.heading:
+                            passages.append(src.heading)
                 ok, why, sc = check_support(s.text, passages, allowed_numbers=deadline_days if s.argument_id == "deadline" else None)
                 if s.argument_id == "deadline":
                     nums = set(re.findall(r"\b(\d+)(?:-day| days| calendar days)\b", s.text))
@@ -330,9 +332,14 @@ def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_token
     # LLM judge (strong tier) and OpenAI Moderation on top of the deterministic checks
     llm = get_llm()
     try:
-        judged = llm.review(draft.model_dump(), {"rules": [r.model_dump() for r in res.rules], "precedents": [p.model_dump() for p in res.precedents]}, facts, raw_values or [])
+        # header/closing lines are filled from the confirmed facts by template; the judge reviews the prose
+        body = {"sections": [s for s in draft.model_dump()["sections"] if s["id"] not in ("header", "closing")]}
+        judged = llm.review(body, {"rules": [r.model_dump() for r in res.rules], "precedents": [p.model_dump() for p in res.precedents]}, facts, raw_values or [])
         for it in judged.issues:
-            issue = Issue(code=f"judge_{it.code}", message=it.message, section_id=it.section_id, sentence_index=it.sentence_index, blocking=it.code in BLOCKING_REVIEW_CODES)
+            block = it.code in BLOCKING_REVIEW_CODES
+            if it.code == "wrong_fact" and not _contradiction_verified(draft, it, facts):
+                block = False  # the judge's claim did not check out against the facts: keep it as a warning
+            issue = Issue(code=f"judge_{it.code}", message=it.message, section_id=it.section_id, sentence_index=it.sentence_index, blocking=block)
             (blocking if issue.blocking else warnings).append(issue)
         flagged = llm.moderate(" ".join(s.text for sec in draft.sections for s in sec.sentences), raw_values or [])
         if flagged:
@@ -347,6 +354,31 @@ def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_token
     cited = [v for v in verdicts]
     score = sum(v.supported for v in cited) / len(cited) if cited else 1.0
     return Review(blocking_issues=blocking, warnings=warnings, verdicts=verdicts, score=round(score, 4))
+
+
+def _contradiction_verified(draft: LetterDraft, it: Any, facts: dict[str, Any]) -> bool:
+    """A wrong_fact verdict blocks only if the judge quoted a real fact value and the sentence does not state it.
+
+    Live runs showed the strong model claiming dates were "in the future" when they were not (85 of 134 blocks);
+    a judge has to point at the fact it says is contradicted, and code checks that claim.
+    """
+    from appeal_core.llm.offline import human_date
+
+    field, value = it.fact_field, (it.fact_value or "").strip()
+    if not field or field not in facts or not value:
+        return False
+    true_val = facts[field]
+    true_str = ", ".join(true_val) if isinstance(true_val, list) else str(true_val or "")
+    if value.lower() != true_str.strip().lower():
+        return False  # misquoted fact
+    sec = next((s for s in draft.sections if s.id == it.section_id), None)
+    if sec is None or not (0 <= it.sentence_index < len(sec.sentences)):
+        return False
+    text = sec.sentences[it.sentence_index].text.lower()
+    forms = {true_str.lower()}
+    if field in ("date_of_service", "notice_date") and human_date(true_str):
+        forms.add(str(human_date(true_str)).lower())
+    return not any(f and f in text for f in forms)
 
 
 def drops_from_review(draft: LetterDraft, rv: Review) -> list[str]:

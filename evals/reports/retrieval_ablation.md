@@ -8,19 +8,22 @@
 | Configuration | dev recall@5 | dev MRR | dev nDCG@10 | dev rules | dev precedents | held-out #1 recall@5 | sealed recall@5 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | keyword only | 0.611 | 0.718 | 0.652 | 0.488 | 0.825 | — | — |
-| vector only | 0.706 | 0.814 | 0.738 | 0.590 | 0.908 | — | — |
+| vector only (MiniLM) | 0.706 | 0.814 | 0.738 | 0.590 | 0.908 | — | — |
+| vector only (OpenAI text-embedding-3-small) | 0.779 | 0.800 | 0.724 | 0.757 | 0.817 | — | — |
 | hybrid RRF | 0.804 | 0.850 | 0.794 | 0.721 | 0.950 | — | — |
 | hybrid RRF + query rewriting | 0.838 | 0.861 | 0.800 | 0.773 | 0.950 | — | — |
 | hybrid RRF + rewriting + diversification | 0.835 | 0.861 | 0.809 | 0.773 | 0.942 | 0.653 | 0.676 |
-| hybrid RRF + rewriting + diversification + cross-encoder rerank (production) | 0.855 | 0.901 | 0.863 | 0.824 | 0.908 | 0.707 | 0.755 |
+| hybrid RRF + rewriting + diversification + MiniLM cross-encoder rerank (production) | 0.855 | 0.901 | 0.863 | 0.824 | 0.908 | 0.707 | 0.755 |
+| hybrid RRF + rewriting + diversification + bge-reranker-base rerank | 0.863 | 0.894 | 0.848 | 0.827 | 0.925 | 0.705 | 0.655 |
+| OpenAI embeddings: hybrid RRF + rewriting + diversification | 0.788 | 0.840 | 0.781 | 0.714 | 0.917 | 0.649 | 0.758 |
+| OpenAI embeddings: hybrid RRF + rewriting + diversification + bge-reranker-base rerank | 0.860 | 0.892 | 0.845 | 0.823 | 0.925 | 0.668 | 0.655 |
 
 Notes:
 - Query rewriting: the user's query feeds both keyword and vector search (weight 1.0); dictionary rewrites feed only the vector side (weight 0.25). Rewrites on the keyword side hurt (OR-queries with many legal terms match everything).
 - Diversification (SPEC 11.3 step 5): required deadline chunks first; at least one procedural-rights chunk and exactly one rights summary, kept at their natural rank; 'Definitions' sections moved back unless the question asks what something means; both outcomes and same-subcategory/recent cases for precedents.
-- Reranker: cross-encoder/ms-marco-MiniLM-L-6-v2 (local, CPU) reorders the top 30 fused candidates by the user's query. Top-30 was fixed before measuring, not tuned. Costs about 1 s per search on a laptop CPU.
+- Rerankers reorder the top 30 fused candidates by the user's query (top-30 fixed before measuring): cross-encoder/ms-marco-MiniLM-L-6-v2 (~90 MB) and BAAI/bge-reranker-base (~1.1 GB), both local on CPU.
+- OpenAI rows: text-embedding-3-small (1536-d) vectors in langchain-postgres PGVector, query embeddings via the LiteLLM gateway (exact Redis cache). They appear only when the run has the key and the index (`make eval-live`, `appeal_data.embed_openai`).
 - Precedent questions are answered without metadata filters here; in the product, Research also filters by the treatment category inferred from the service.
-
-Phase C will add a row: Azure AI Search hybrid + semantic ranker.
 
 ## Misses (production config, dev set, recall@5 < 1)
 

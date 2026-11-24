@@ -3,7 +3,8 @@
 Per READY case:
 - user_input: the appeal task (category, service, denial reason)
 - retrieved_contexts: what Research retrieved through the LangChain retrievers (rules + precedents)
-- response: the letter body (tokenized; identifiers never leave as raw values)
+- response: the retrieval-grounded sections (grounds + precedents); the rest of the letter restates the member's
+  own facts, which are not retrieved contexts and would count as unfaithful by construction
 - reference: the KB playbook's legal arguments for the category (written from the regulations, reviewed
   separately), standing in for a hand-written ideal answer
 
@@ -27,7 +28,10 @@ def samples_from(runs: list[dict], limit: int = 15) -> list[dict[str, Any]]:
         if r["status"] not in ("READY", "NEEDS_HUMAN") or not r.get("sections") or not r.get("research"):
             continue
         res, f = r["research"], r["g"]["label"]["fields"]
-        body = " ".join(s["text"] for sec in r["sections"] if sec["id"] not in ("header", "closing") for s in sec["sentences"])
+        # the retrieval-grounded part of the letter; facts/requests come from the member, not from the contexts
+        body = " ".join(s["text"] for sec in r["sections"] if sec["id"] in ("grounds", "precedents") for s in sec["sentences"])
+        if not body:
+            continue
         contexts = [x["text"] for x in res.get("rules", [])] + [x["excerpt"] for x in res.get("precedents", [])]
         pb = playbooks()[r["category"]]
         sample = {

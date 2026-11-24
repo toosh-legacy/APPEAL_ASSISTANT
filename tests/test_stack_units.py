@@ -48,7 +48,26 @@ def test_ragas_samples_skip_letters_with_raw_identifiers():
         "g": {"label": {"fields": {"service": "MRI"}, "reason_text": "Not medically necessary."}},
         "research": {"rules": [{"text": "A plan must ..."}], "precedents": [{"excerpt": "Reviewers found ..."}]},
     }
-    ok = {**base, "sections": [{"id": "intro", "sentences": [{"text": "Member [MEMBER_ID_1] appeals."}]}]}
-    leaky = {**base, "sections": [{"id": "intro", "sentences": [{"text": "Member ZZTEST123456 appeals."}]}]}
+    ok = {**base, "sections": [{"id": "grounds", "sentences": [{"text": "Member [MEMBER_ID_1] appeals."}]}]}
+    leaky = {**base, "sections": [{"id": "grounds", "sentences": [{"text": "Member ZZTEST123456 appeals."}]}]}
     got = samples_from([ok, leaky])
     assert len(got) == 1 and got[0]["retrieved_contexts"] == ["A plan must ...", "Reviewers found ..."]
+
+
+def test_judge_wrong_fact_blocks_only_when_the_contradiction_checks_out():
+    from appeal_core.llm.contracts import ReviewIssue
+    from appeal_core.schemas import LetterDraft
+    from appeal_worker.agents import _contradiction_verified
+
+    draft = LetterDraft.model_validate(
+        {"sections": [{"id": "intro", "title": "Intro", "sentences": [{"text": "My MRI on March 3, 2025 was denied."}, {"text": "My MRI on April 9, 2025 was denied."}]}]}
+    )
+    facts = {"date_of_service": "2025-03-03", "service": "MRI"}
+
+    def issue(i, field, value):
+        return ReviewIssue(section_id="intro", sentence_index=i, code="wrong_fact", message="m", fact_field=field, fact_value=value)
+
+    assert not _contradiction_verified(draft, issue(0, "date_of_service", "2025-03-03"), facts)  # sentence states the fact
+    assert _contradiction_verified(draft, issue(1, "date_of_service", "2025-03-03"), facts)  # real contradiction
+    assert not _contradiction_verified(draft, issue(1, "date_of_service", "2025-03-04"), facts)  # judge misquoted
+    assert not _contradiction_verified(draft, issue(1, None, None), facts)  # no fact named

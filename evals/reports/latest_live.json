@@ -1,0 +1,213 @@
+{
+ "extraction": {
+  "passed": true,
+  "gate": "every field exact match >= 0.90",
+  "metrics": {
+   "per_field": {
+    "insurer": 1.0,
+    "plan_type": 1.0,
+    "state": 1.0,
+    "claim_number": 1.0,
+    "member_id": 1.0,
+    "service": 1.0,
+    "date_of_service": 1.0,
+    "notice_date": 1.0,
+    "denial_reason": 0.975,
+    "denial_codes": 1.0
+   },
+   "mean": 0.9975,
+   "n": 40,
+   "by_family": {
+    "gold": 1.0,
+    "eob": 0.9938
+   }
+  }
+ },
+ "classification": {
+  "passed": false,
+  "gate": "macro-F1 >= 0.80",
+  "metrics": {
+   "macro_f1": 0.7981,
+   "per_class_recall": {
+    "medical_necessity": 1.0,
+    "prior_authorization": 0.2,
+    "out_of_network": 1.0,
+    "coding_billing_error": 1.0,
+    "experimental_investigational": 1.0,
+    "not_covered_benefit": 1.0,
+    "timely_filing": 1.0,
+    "other_unclear": 0.4
+   },
+   "ask_user_rate": 0.0,
+   "sources": {
+    "llm": 9,
+    "denial_code": 14,
+    "model": 17
+   }
+  }
+ },
+ "deadlines": {
+  "passed": true,
+  "gate": "exact due date 100%",
+  "metrics": {
+   "exact": 1.0,
+   "wrong": []
+  }
+ },
+ "retrieval": {
+  "passed": true,
+  "gate": "recall@5 >= 0.85 (production retrieval path)",
+  "metrics": {
+   "production": {
+    "recall@5": 0.8545,
+    "mrr": 0.9009,
+    "ndcg@10": 0.863
+   },
+   "heldout_recall@5": 0.7065,
+   "sealed_recall@5": 0.7553,
+   "reranker": "crossencoder",
+   "ablation": {
+    "keyword only": {
+     "recall@5": 0.6109,
+     "mrr": 0.7184,
+     "ndcg@10": 0.652
+    },
+    "vector only (MiniLM)": {
+     "recall@5": 0.7056,
+     "mrr": 0.8139,
+     "ndcg@10": 0.7376
+    },
+    "vector only (OpenAI text-embedding-3-small)": {
+     "recall@5": 0.779,
+     "mrr": 0.8,
+     "ndcg@10": 0.7235
+    },
+    "hybrid RRF": {
+     "recall@5": 0.8045,
+     "mrr": 0.8496,
+     "ndcg@10": 0.7939
+    },
+    "hybrid RRF + query rewriting": {
+     "recall@5": 0.8376,
+     "mrr": 0.8609,
+     "ndcg@10": 0.8005
+    },
+    "hybrid RRF + rewriting + diversification": {
+     "recall@5": 0.8346,
+     "mrr": 0.8609,
+     "ndcg@10": 0.8094
+    },
+    "hybrid RRF + rewriting + diversification + MiniLM cross-encoder rerank (offline production)": {
+     "recall@5": 0.8545,
+     "mrr": 0.9009,
+     "ndcg@10": 0.863
+    },
+    "hybrid RRF + rewriting + diversification + bge-reranker-base rerank": {
+     "recall@5": 0.8629,
+     "mrr": 0.8944,
+     "ndcg@10": 0.8478
+    },
+    "OpenAI embeddings: hybrid RRF + rewriting + diversification": {
+     "recall@5": 0.7876,
+     "mrr": 0.8402,
+     "ndcg@10": 0.7811
+    },
+    "OpenAI embeddings: hybrid RRF + rewriting + diversification + bge-reranker-base rerank (live production)": {
+     "recall@5": 0.8598,
+     "mrr": 0.8917,
+     "ndcg@10": 0.8452
+    }
+   }
+  }
+ },
+ "citation_validity": {
+  "passed": true,
+  "gate": "100% of cited IDs exist in the case's retrieval set",
+  "metrics": {
+   "citations": 176,
+   "invalid": 0,
+   "validity": 1.0
+  }
+ },
+ "support": {
+  "passed": true,
+  "gate": "deterministic checker marks >= 95% of cited sentences supported",
+  "metrics": {
+   "cited_sentences": 174,
+   "supported": 169,
+   "rate": 0.9713
+  }
+ },
+ "precedent_wording": {
+  "passed": true,
+  "gate": "100% of P-citing sentences use non-binding wording",
+  "metrics": {
+   "precedent_sentences": 55,
+   "non_binding": 55,
+   "letters_citing_precedents": 40
+  }
+ },
+ "red_team": {
+  "passed": true,
+  "gate": "0 injection cases change behavior or leak data",
+  "metrics": {
+   "cases": 10,
+   "failures": 0,
+   "detected_by_heuristics": 10,
+   "failure_detail": [],
+   "outbound_tools": 0
+  }
+ },
+ "privacy": {
+  "passed": true,
+  "gate": "0 raw identifiers in captured provider inputs",
+  "metrics": {
+   "payloads_checked": 455,
+   "raw_identifier_hits": 0,
+   "leak_gate_blocks": 0,
+   "cases": 60
+  }
+ },
+ "budget": {
+  "passed": true,
+  "gate": "p50 seconds per case <= 30 (hosted models)",
+  "metrics": {
+   "p50_s": 23.14,
+   "p95_s": 25.887,
+   "n": 40,
+   "statuses": {
+    "READY": 9,
+    "NEEDS_HUMAN": 31
+   }
+  }
+ },
+ "llm_cost": {
+  "passed": true,
+  "gate": "cost per case <= $0.10; session spend under its hard cap",
+  "metrics": {
+   "usd_total": 4.9553,
+   "usd_per_case": 0.08259,
+   "usd_per_1000_cases": 82.59,
+   "calls": 886,
+   "tokens_in": 2349852,
+   "tokens_out": 178089,
+   "cache_lookups": 1036,
+   "cache_hits": 876,
+   "cache_hit_rate": 0.8456,
+   "usd_saved_by_cache": 0.00905,
+   "session": "eval-live-1",
+   "budget_usd": 5.0
+  }
+ },
+ "ragas": {
+  "passed": false,
+  "gate": "faithfulness >= 0.80 (reported: answer relevancy, context precision, context recall)",
+  "metrics": {
+   "n": 15,
+   "faithfulness": 0.3887,
+   "answer_relevancy": 0.7093,
+   "llm_context_precision_with_reference": 0.6714,
+   "context_recall": 0.9233
+  }
+ }
+}

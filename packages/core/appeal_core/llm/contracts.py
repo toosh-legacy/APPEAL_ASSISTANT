@@ -81,6 +81,8 @@ class ReviewIssue(BaseModel):
     sentence_index: int
     code: ReviewCode
     message: str
+    fact_field: str | None = Field(description="for wrong_fact: the facts key the sentence contradicts, else null")
+    fact_value: str | None = Field(description="for wrong_fact: that key's value copied exactly from facts, else null")
 
 
 class ReviewOut(BaseModel):

@@ -61,11 +61,11 @@ def load_set(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-PRODUCTION = "hybrid RRF + rewriting + diversification + MiniLM cross-encoder rerank (offline production)"
+PRODUCTION = "hybrid RRF + rewriting + diversification + MiniLM cross-encoder rerank (production)"
 NO_RERANK = "hybrid RRF + rewriting + diversification"
 BGE = "hybrid RRF + rewriting + diversification + bge-reranker-base rerank"
 OPENAI_NO_RERANK = "OpenAI embeddings: hybrid RRF + rewriting + diversification"
-OPENAI_BGE = "OpenAI embeddings: hybrid RRF + rewriting + diversification + bge-reranker-base rerank (live production)"
+OPENAI_BGE = "OpenAI embeddings: hybrid RRF + rewriting + diversification + bge-reranker-base rerank"
 # (name, mode, rewrite, diversify, reranker, vectors)
 CONFIGS = [
     ("keyword only", "keyword", False, False, "none", "local"),

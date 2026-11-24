@@ -65,9 +65,10 @@ class LLMProvider:
 
     # ------------------------------------------------------------------ classifier fallback (cheap tier)
     def classify(
-        self, reason: str | None, codes: list[str], service: str | None, case_raw_values: list[str]
+        self, reason: str | None, codes: list[str], service: str | None, case_raw_values: list[str], letter: str | None = None
     ) -> CategoryOut:
-        req = json.dumps({"reason": reason, "codes": codes, "service": service}, ensure_ascii=False)
+        # the whole (tokenized) letter: given only the reason line, the model misread prior-authorization denials
+        req = json.dumps({"reason": reason, "codes": codes, "service": service, "letter": (letter or "")[:6000]}, ensure_ascii=False)
         tier = "fast-ft" if get_settings().openai_fine_tuned_model else "fast"
         return self._run(tier, "classifier_category", CategoryOut, {"request": req}, case_raw_values)
 

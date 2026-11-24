@@ -250,6 +250,8 @@ class Orchestrator:
         codes: list[str] = list(facts.get("denial_codes") or [])
         service: str | None = facts.get("service")
         raw = tmap.raw_values()
+        with self.Session() as s:
+            letter = s.scalar(select(Extraction.redacted_text).where(Extraction.case_id == case_id))
 
         def set_cat(s: Session, case: Case, out: dict) -> None:
             if not out["needs_user"]:
@@ -260,7 +262,7 @@ class Orchestrator:
                 case_id,
                 "classifier",
                 {"reason": reason, "codes": codes, "service": service},
-                lambda: agents.classify(reason, codes, service, raw_values=raw).model_dump(),
+                lambda: agents.classify(reason, codes, service, raw_values=raw, letter=letter).model_dump(),
                 {Status.CLASSIFYING},
                 lambda o: Status.NEEDS_CATEGORY if o["needs_user"] else Status.RESEARCHING,
                 set_cat,
