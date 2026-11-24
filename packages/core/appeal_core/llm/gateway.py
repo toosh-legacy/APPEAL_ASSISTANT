@@ -74,9 +74,10 @@ def _on_success(kwargs: dict[str, Any], response: Any, start: Any, end: Any) -> 
     saved = 0.0
     if hit:
         try:
-            a, b = litellm.cost_per_token(
-                model=kwargs.get("model", ""), prompt_tokens=tin, completion_tokens=tout
-            )
+            # cache hits report the tier alias ("rewrite"), not the model: price them as the tier's model
+            name = str(kwargs.get("model", "")).removeprefix("openai/")
+            mid = _model_ids().get(name, name)
+            a, b = litellm.cost_per_token(model=mid, prompt_tokens=tin, completion_tokens=tout)
             saved = a + b
         except Exception:
             saved = 0.0
