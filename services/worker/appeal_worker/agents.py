@@ -12,7 +12,8 @@ from appeal_core.adapters import get_injection_detector, get_llm
 from appeal_core.deadlines import compute_deadlines, next_level_options
 from appeal_core.kb import CATEGORIES, playbooks
 from appeal_core.llm.base import ProviderUnavailable
-from appeal_core.llm.offline import OfflineProvider, classify_by_codes
+from appeal_core.llm.contracts import BLOCKING_REVIEW_CODES
+from appeal_core.llm.offline import classify_by_codes, offline_write
 from appeal_core.privacy.injection import spans_to_neutralize
 from appeal_core.privacy.pii import get_pii_detector
 from appeal_core.privacy.vault import TokenMap, tokenize
@@ -70,7 +71,7 @@ def rule_scores(reason: str) -> dict[str, float]:
     return {c: v / tot for c, v in sc.items()}
 
 
-def classify(reason: str | None, codes: list[str], service: str | None, threshold: float | None = None) -> Classification:
+def classify(reason: str | None, codes: list[str], service: str | None, threshold: float | None = None, raw_values: list[str] | None = None) -> Classification:
     threshold = get_settings().classifier_threshold if threshold is None else threshold
     reason = reason or ""
     probs: dict[str, float] | None = None
@@ -97,13 +98,21 @@ def classify(reason: str | None, codes: list[str], service: str | None, threshol
             flagged = True  # model strongly disagrees with the code map -> keep model answer, flag for review
         else:
             top, p, source = code_cat, max(0.95, probs.get(code_cat, 0.0)), "denial_code"
-    needs_user = p < threshold
-    alts = [(c, round(v, 4)) for c, v in ranked if c != top][:3]
     rationale = {
         "denial_code": f"The denial code(s) {', '.join(codes)} map to this category.",
         "model": "Predicted from the wording of the denial reason by the denial-category model (M1).",
         "rules": "Matched keywords in the denial reason (fallback rules).",
     }[source]
+    if p < threshold and source != "denial_code" and reason:
+        # M1 is unsure: ask the cheap-tier LLM; accept it only when it is at least as confident as the threshold
+        try:
+            got = get_llm().classify(reason, codes, service, raw_values or [])
+            if got.confidence >= threshold:
+                top, p, source, rationale = got.category, got.confidence, "llm", got.rationale
+        except ProviderUnavailable:
+            pass
+    needs_user = p < threshold
+    alts = [(c, round(v, 4)) for c, v in ranked if c != top][:3]
     return Classification.model_validate(
         {"category": top, "probability": round(float(p), 4), "alternatives": alts, "rationale": rationale, "source": source, "needs_user": needs_user, "flagged_for_review": flagged}
     )
@@ -243,7 +252,7 @@ def write(facts: dict[str, Any], category: str, res: Research, raw_values: list[
     try:
         out = llm.write(req, raw_values)
     except ProviderUnavailable:
-        out = OfflineProvider().write(req, raw_values)  # degraded mode: template writer
+        out = offline_write(req)  # degraded mode: deterministic playbook writer
         degraded = True
     d = LetterDraft(**out)
     d.degraded = degraded
@@ -268,7 +277,7 @@ class _Loc(TypedDict):
     sentence_index: int
 
 
-def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_tokens: set[str], injection_flags: list[str] | None = None) -> Review:
+def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_tokens: set[str], injection_flags: list[str] | None = None, raw_values: list[str] | None = None) -> Review:
     allowed = {r.cite_id: r for r in res.rules} | {p.cite_id: p for p in res.precedents}
     deadline_days = {str(d.days) for d in res.deadlines}
     blocking: list[Issue] = []
@@ -312,6 +321,18 @@ def review(draft: LetterDraft, res: Research, facts: dict[str, Any], known_token
                 verdicts.append(SentenceVerdict(**loc, supported=ok, reason=why, score=round(sc, 3)))
                 if not ok:
                     blocking.append(Issue(code="unsupported", message=f"Sentence not supported by its source: {why}", **loc))
+    # LLM judge (strong tier) and OpenAI Moderation on top of the deterministic checks
+    llm = get_llm()
+    try:
+        judged = llm.review(draft.model_dump(), {"rules": [r.model_dump() for r in res.rules], "precedents": [p.model_dump() for p in res.precedents]}, facts, raw_values or [])
+        for it in judged.issues:
+            issue = Issue(code=f"judge_{it.code}", message=it.message, section_id=it.section_id, sentence_index=it.sentence_index, blocking=it.code in BLOCKING_REVIEW_CODES)
+            (blocking if issue.blocking else warnings).append(issue)
+        flagged = llm.moderate(" ".join(s.text for sec in draft.sections for s in sec.sentences), raw_values or [])
+        if flagged:
+            blocking.append(Issue(code="moderation", message=f"Flagged by moderation: {', '.join(flagged)}"))
+    except ProviderUnavailable:
+        warnings.append(Issue(code="judge_unavailable", message="The AI reviewer was unavailable; only the automatic checks ran.", blocking=False))
     for ph in draft.placeholders:
         warnings.append(Issue(code="placeholder", message=f"Fill in {ph} before exporting", blocking=False))
     warnings.append(Issue(code="verify_grounds", message="Delete any ground that isn't true for you.", blocking=False))

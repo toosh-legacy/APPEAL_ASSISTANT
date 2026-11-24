@@ -14,6 +14,7 @@ from typing import Any
 
 import yaml
 
+from appeal_core.llm.cost import BudgetExceeded
 from appeal_core.privacy.leak_gate import check_payload
 from appeal_core.settings import ROOT
 
@@ -26,7 +27,10 @@ def prompt(prompt_id: str) -> dict[str, Any]:
 
 
 def prompt_versions() -> dict[str, str]:
-    return {p.stem: yaml.safe_load(p.read_text(encoding="utf-8"))["version"] for p in sorted(Path(PROMPTS).glob("*.yaml"))}
+    return {
+        p.stem: yaml.safe_load(p.read_text(encoding="utf-8"))["version"]
+        for p in sorted(Path(PROMPTS).glob("*.yaml"))
+    }
 
 
 class ProviderUnavailable(Exception):
@@ -125,6 +129,8 @@ def guarded_call(
             )
             CALL_LOG.records.append(rec)
             return out, rec
+        except BudgetExceeded:
+            raise  # a spent budget is a hard stop, not a transient error
         except Exception as e:  # provider error
             last = e
             br.record(False)

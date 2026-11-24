@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+# Unit tests never call a hosted model, whatever .env says: the LangChain fake chat model answers instead.
+os.environ["LLM_PROVIDER"] = "offline"
+os.environ["LANGSMITH_TRACING"] = "false"
 
 
 def _pg_available(url: str) -> bool:

@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any
 
 from appeal_core.kb import denial_codes, playbooks
-from appeal_core.llm.base import guarded_call
 from appeal_core.text_support import best_support, content_terms
 
 # ------------------------------------------------------------------ extraction
@@ -57,7 +56,10 @@ _DOC_TITLE = re.compile(
 
 
 def _insurer(lines: list[str], text: str) -> tuple[str | None, float]:
-    kw = re.compile(r"\b(health|insurance|plan|care|benefits?|partners|mutual|network|trust|assurance|blue|medical)\b", re.I)
+    kw = re.compile(
+        r"\b(health|insurance|plan|care|benefits?|partners|mutual|network|trust|assurance|blue|medical)\b",
+        re.I,
+    )
     for ln in lines[:4]:
         cand = ln.split("|")[0].strip()
         if _DOC_TITLE.search(cand):
@@ -107,7 +109,9 @@ def _labelled(text: str, labels: str) -> str | None:
 # Column headers of claim tables (EOB-style statements), mapped to fields.
 _TABLE_COLUMNS = {
     "date_of_service": re.compile(r"(?i)^(dates? of service|service dates?|dos|date\(s\) of service)$"),
-    "service": re.compile(r"(?i)^(what you received|service( description)?|description( of service)?|procedure|item/service|treatment)$"),
+    "service": re.compile(
+        r"(?i)^(what you received|service( description)?|description( of service)?|procedure|item/service|treatment)$"
+    ),
 }
 
 
@@ -163,7 +167,9 @@ def offline_extract(text: str) -> dict[str, Any]:
     if not svc and table.get("service"):
         svc, conf = table["service"], 0.85
     if not svc:
-        m = re.search(r"(?i)(?:for|of) ((?:[a-z][\w\-()]*\s){0,5}[a-z][\w\-()]*) (?:was|is|requires|does)", text)
+        m = re.search(
+            r"(?i)(?:for|of) ((?:[a-z][\w\-()]*\s){0,5}[a-z][\w\-()]*) (?:was|is|requires|does)", text
+        )
         svc, conf = (m.group(1), 0.5) if m else (None, 0.0)
     f["service"] = _fv(svc, conf)
 
@@ -195,7 +201,9 @@ def offline_extract(text: str) -> dict[str, Any]:
                 reason, conf = lines[i + 1], 0.85
                 break
     if not reason:
-        m = re.search(r"(?i)([^.\n]*\b(denied|not covered|not medically necessary|not approved)\b[^.\n]*\.)", text)
+        m = re.search(
+            r"(?i)([^.\n]*\b(denied|not covered|not medically necessary|not approved)\b[^.\n]*\.)", text
+        )
         reason, conf = (m.group(1).strip(), 0.5) if m else (None, 0.0)
     f["denial_reason"] = _fv(reason, conf)
 
@@ -205,19 +213,31 @@ def offline_extract(text: str) -> dict[str, Any]:
     for k, v in f.items():
         v["hint"] = HINTS.get(k)
     missing = [k for k, v in f.items() if not v["value"] and k != "denial_codes"]
-    return {"fields": f, "missing_fields": missing, "plan_type": f["plan_type"]["value"], "state": f["state"]["value"]}
+    return {
+        "fields": f,
+        "missing_fields": missing,
+        "plan_type": f["plan_type"]["value"],
+        "state": f["state"]["value"],
+    }
 
 
 # ------------------------------------------------------------------ query rewriting
 SYNONYMS = {
-    "medical_necessity": ["not medically necessary", "medical necessity criteria", "medically necessary treatment"],
+    "medical_necessity": [
+        "not medically necessary",
+        "medical necessity criteria",
+        "medically necessary treatment",
+    ],
     "prior_authorization": ["prior authorization precertification", "approval before service"],
     "out_of_network": ["out-of-network emergency services", "nonparticipating provider"],
     "experimental_investigational": ["experimental investigational treatment", "unproven treatment evidence"],
     "not_covered_benefit": ["excluded benefit coverage", "plan provisions coverage"],
     "coding_billing_error": ["claim billing information", "claim submission error"],
     "timely_filing": ["claim filing time limit", "late claim submission"],
-    "deadline": ["time to file appeal", "days following receipt of notification adverse benefit determination"],
+    "deadline": [
+        "time to file appeal",
+        "days following receipt of notification adverse benefit determination",
+    ],
     "external review": ["independent external review", "independent review organization"],
 }
 
@@ -225,10 +245,16 @@ SYNONYMS = {
 # Plain-language -> regulatory vocabulary. Each matched concept appends its legal terms to the query
 # (variant 2) and contributes a short legal-concept query (variant 3). The original query always stays first.
 CONCEPTS: list[tuple[str, str]] = [
-    (r"deadline|how long|how many days|time limit|timeframe|time frame", "days following receipt of notification filed within calendar days"),
+    (
+        r"deadline|how long|how many days|time limit|timeframe|time frame",
+        "days following receipt of notification filed within calendar days",
+    ),
     (r"external review|independent review", "external review independent review organization"),
     (r"cop(y|ies)|documents|records|my file", "reasonable access free of charge documents records relevant"),
-    (r"doctor|health care professional|expert|specialist", "consult health care professional appropriate training experience medical judgment"),
+    (
+        r"doctor|health care professional|expert|specialist",
+        "consult health care professional appropriate training experience medical judgment",
+    ),
     (r"job|employer|work", "group health plan"),
     (r"marketplace|individual", "individual health insurance coverage issuer"),
     (r"medicare advantage|\bma\b", "MA organization enrollee organization determination"),
@@ -260,16 +286,29 @@ def offline_rewrite(query: str) -> list[str]:
 NON_BINDING = "Independent reviewers in similar California cases have found"
 
 
-_FAVORABLE = re.compile(r"(is|was|are|were) (medically necessary|likely to be more beneficial|appropriate|indicated|warranted)", re.I)
+_FAVORABLE = re.compile(
+    r"(is|was|are|were) (medically necessary|likely to be more beneficial|appropriate|indicated|warranted)",
+    re.I,
+)
 
 
 def _first_sentence(excerpt: str, max_words: int = 40) -> str | None:
     """The reviewer's favorable conclusion sentence, quoted (grounded by construction)."""
     t = re.sub(r"\s+", " ", excerpt.strip())
     for sent in re.split(r"(?<=[.!?])\s+", t):
-        s = re.sub(r"^(Findings:|Final Result:|Therefore,|Thus,|Accordingly,|In conclusion,|For (?:these|this) reasons?,|As such,)\s*", "", sent.strip(), flags=re.I)
+        s = re.sub(
+            r"^(Findings:|Final Result:|Therefore,|Thus,|Accordingly,|In conclusion,|For (?:these|this) reasons?,|As such,)\s*",
+            "",
+            sent.strip(),
+            flags=re.I,
+        )
         s = re.sub(r"^the (physician )?reviewers? (found|determined) that\s*", "", s, flags=re.I)
-        if _FAVORABLE.search(s) and not re.search(r"\bnot\b", s, re.I) and 6 <= len(s.split()) <= max_words and ":" not in s:
+        if (
+            _FAVORABLE.search(s)
+            and not re.search(r"\bnot\b", s, re.I)
+            and 6 <= len(s.split()) <= max_words
+            and ":" not in s
+        ):
             return s.rstrip(".")
     return None
 
@@ -311,8 +350,14 @@ def offline_write(req: dict[str, Any]) -> dict[str, Any]:
     header = [
         {"text": f"Member: {facts.get('member_name') or '[ADD: your full name]'}", "kind": "header"},
         {"text": f"Member ID: {facts.get('member_id') or '[ADD: member ID]'}", "kind": "header"},
-        {"text": f"Claim or reference number: {facts.get('claim_number') or '[ADD: claim number]'}", "kind": "header"},
-        {"text": f"Date of service: {human_date(facts.get('date_of_service')) or '[ADD: date of service]'}", "kind": "header"},
+        {
+            "text": f"Claim or reference number: {facts.get('claim_number') or '[ADD: claim number]'}",
+            "kind": "header",
+        },
+        {
+            "text": f"Date of service: {human_date(facts.get('date_of_service')) or '[ADD: date of service]'}",
+            "kind": "header",
+        },
         {"text": f"RE: Appeal of the denial of {svc}", "kind": "header"},
     ]
     sections.append({"id": "header", "title": "Header", "sentences": header})
@@ -322,7 +367,10 @@ def offline_write(req: dict[str, Any]) -> dict[str, Any]:
             "text": f"I am writing to appeal {insurer}'s decision dated {nd or '[ADD: date of the denial letter]'} to deny coverage for {svc}.",
             "kind": "fact",
         },
-        {"text": f"The reason given for the denial was: \"{facts.get('denial_reason') or '[ADD: the reason given in the letter]'}\"", "kind": "fact"},
+        {
+            "text": f'The reason given for the denial was: "{facts.get("denial_reason") or "[ADD: the reason given in the letter]"}"',
+            "kind": "fact",
+        },
     ]
     sections.append({"id": "intro", "title": "Introduction", "sentences": intro})
 
@@ -374,7 +422,12 @@ def offline_write(req: dict[str, Any]) -> dict[str, Any]:
             }
         )
     if prec:
-        prec.append({"text": "I understand these decisions do not bind my plan, but I ask that you consider them.", "kind": "fact"})
+        prec.append(
+            {
+                "text": "I understand these decisions do not bind my plan, but I ask that you consider them.",
+                "kind": "fact",
+            }
+        )
         sections.append({"id": "precedents", "title": "Similar independent reviews", "sentences": prec})
 
     request = [
@@ -396,7 +449,12 @@ def offline_write(req: dict[str, Any]) -> dict[str, Any]:
         for sent in s["sentences"]:
             sent.setdefault("citations", [])
             ph(sent["text"])
-    return {"sections": sections, "placeholders": placeholders, "revision": req.get("revision", 0), "degraded": False}
+    return {
+        "sections": sections,
+        "placeholders": placeholders,
+        "revision": req.get("revision", 0),
+        "degraded": False,
+    }
 
 
 def apply_style(sections: list[dict], section_id: str | None, style: str) -> list[dict]:
@@ -407,28 +465,25 @@ def apply_style(sections: list[dict], section_id: str | None, style: str) -> lis
             s["sentences"] = s["sentences"][: max(1, len(s["sentences"]) - 1)]
         elif style == "firmer":
             for sent in s["sentences"]:
-                sent["text"] = sent["text"].replace("I ask that", "I request that").replace("I ask the plan to", "I request that the plan").replace("Please ", "I request that you ")
-                sent["text"] = re.sub(r"I request that you (\w)", lambda m: "I request that you " + m.group(1).lower(), sent["text"])
+                sent["text"] = (
+                    sent["text"]
+                    .replace("I ask that", "I request that")
+                    .replace("I ask the plan to", "I request that the plan")
+                    .replace("Please ", "I request that you ")
+                )
+                sent["text"] = re.sub(
+                    r"I request that you (\w)",
+                    lambda m: "I request that you " + m.group(1).lower(),
+                    sent["text"],
+                )
         elif style == "add_detail" and s["id"] == "facts":
-            s["sentences"].append({"text": "[ADD: one or two sentences about your symptoms and the treatments you have already tried]", "kind": "fact"})
+            s["sentences"].append(
+                {
+                    "text": "[ADD: one or two sentences about your symptoms and the treatments you have already tried]",
+                    "kind": "fact",
+                }
+            )
     return sections
-
-
-class OfflineProvider:
-    name = "offline"
-    model = "rules-templates-v1"
-
-    def extract(self, tokenized_text: str, case_raw_values: list[str]) -> dict[str, Any]:
-        out, _ = guarded_call(self.name, self.model, "intake_extract", {"document": tokenized_text}, case_raw_values, lambda p: offline_extract(p["document"]))
-        return out
-
-    def write(self, request: dict[str, Any], case_raw_values: list[str]) -> dict[str, Any]:
-        out, _ = guarded_call(self.name, self.model, "writer_letter", request, case_raw_values, offline_write)
-        return out
-
-    def rewrite_query(self, query: str, case_raw_values: list[str]) -> list[str]:
-        out, _ = guarded_call(self.name, self.model, "query_rewrite", {"query": query}, case_raw_values, lambda p: offline_rewrite(p["query"]))
-        return out
 
 
 def classify_by_codes(codes: list[str]) -> str | None:
@@ -437,4 +492,4 @@ def classify_by_codes(codes: list[str]) -> str | None:
     return cats.pop() if len(cats) == 1 else None
 
 
-__all__ = ["OfflineProvider", "offline_extract", "offline_write", "offline_rewrite", "content_terms", "parse_date"]
+__all__ = ["offline_extract", "offline_write", "offline_rewrite", "content_terms", "parse_date"]

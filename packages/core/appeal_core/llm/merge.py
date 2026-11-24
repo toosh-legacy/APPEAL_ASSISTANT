@@ -32,17 +32,9 @@ def same_shape(v: Any, field: str) -> bool:
     return isinstance(v, str) and bool(v.strip())
 
 
-def merge_model_fields(base: dict[str, Any], model_json: str, document: str | None = None) -> dict[str, Any]:
-    """Overlay valid model values on `base` (an offline_extract result). Invalid JSON leaves base unchanged.
-    With `document`, quoted fields are accepted only when they occur in it."""
-    try:
-        got = json.loads(model_json)
-    except (TypeError, ValueError):
-        return base
-    if not isinstance(got, dict):
-        return base
-    inner = got.get("fields")
-    fields: dict[str, Any] = inner if isinstance(inner, dict) else got
+def merge_fields(base: dict[str, Any], fields: dict[str, Any], document: str | None = None) -> dict[str, Any]:
+    """Overlay model values on `base` (an offline_extract result) where they have the right shape and, for
+    quoted fields, occur in `document`. Recomputes missing_fields, plan_type and state."""
     for k, v in fields.items():
         if k in base["fields"] and same_shape(v, k) and (isinstance(v, list) or grounded(v, k, document)):
             base["fields"][k]["value"] = [c.strip() for c in v] if isinstance(v, list) else v.strip()
@@ -50,3 +42,15 @@ def merge_model_fields(base: dict[str, Any], model_json: str, document: str | No
     base["plan_type"] = base["fields"]["plan_type"]["value"]
     base["state"] = base["fields"]["state"]["value"]
     return base
+
+
+def merge_model_fields(base: dict[str, Any], model_json: str, document: str | None = None) -> dict[str, Any]:
+    """`merge_fields` for a raw JSON answer. Invalid JSON leaves base unchanged."""
+    try:
+        got = json.loads(model_json)
+    except (TypeError, ValueError):
+        return base
+    if not isinstance(got, dict):
+        return base
+    inner = got.get("fields")
+    return merge_fields(base, inner if isinstance(inner, dict) else got, document)

@@ -20,11 +20,22 @@ class Settings(BaseSettings):
     queue_backend: str = "postgres"
     blob_backend: str = "azurite"
     progress_backend: str = "redis"
-    llm_provider: str = "offline"  # offline | openai | ollama | azure_openai
+    llm_provider: str = "offline"  # offline (LangChain fake chat model, tests/CI) | openai (via the LiteLLM gateway)
     openai_api_key: str = ""  # from the git-ignored .env only
-    openai_model: str = "gpt-4o-mini"
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_cost_per_1k_tokens: float = 0.0  # set to your model's blended price to track spend in agent_run.cost_usd
+    # model tiers (IDs checked against the account at startup); each has a fallback the gateway switches to
+    openai_model_fast: str = "gpt-4.1-mini"  # extraction, classification, query rewriting
+    openai_model_fast_fallback: str = "gpt-4o-mini"
+    openai_model_strong: str = "gpt-4.1"  # writer, reviewer, eval judge
+    openai_model_strong_fallback: str = "gpt-4o"
+    openai_embedding_model: str = "text-embedding-3-small"
+    openai_fine_tuned_model: str = ""  # set after `python -m appeal_evals.finetune` to serve the fine-tuned cheap model
+    llm_budget_usd: float = 5.0  # hard stop per session (LLM_SESSION, default the UTC date)
+    llm_run_budget_usd: float = 2.0  # hard stop per process (LiteLLM max_budget)
+    llm_session: str = ""
+    semantic_cache: bool = True  # LiteLLM redis-semantic cache for query-rewrite calls; exact cache for query embeddings
+    semantic_cache_threshold: float = 0.985  # 0.92 let a different topic hit (the shared system prompt dominates similarity)
+    langsmith_api_key: str = ""  # LangSmith tracing only when set; OpenTelemetry always runs
+    langsmith_project: str = "appeal-assistant"
     embedder: str = "minilm"
     retriever_backend: str = "postgres"
     reranker: str = "crossencoder"  # crossencoder | none (CI: none, avoids the model download)

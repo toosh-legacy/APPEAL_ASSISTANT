@@ -57,19 +57,3 @@ def test_switching_backend_without_credentials(monkeypatch, env, factory):
 @pytest.mark.skipif(not os.environ.get("AZURE_OPENAI_ENDPOINT"), reason="Azure OpenAI not configured (Phase C)")
 def test_azure_openai_contract():
     assert A.AzureOpenAIProvider() is not None
-
-
-def test_ollama_without_server_gives_clear_error(monkeypatch):
-    from appeal_core.llm.ollama import OllamaNotRunning, OllamaProvider
-
-    with pytest.raises(OllamaNotRunning) as e:
-        OllamaProvider(host="http://127.0.0.1:9")
-    assert "LLM_PROVIDER=offline" in str(e.value)
-
-
-def test_ollama_ignores_values_with_the_wrong_shape():
-    from appeal_core.llm.merge import same_shape as _same_shape
-
-    assert _same_shape(["CO-50"], "denial_codes") and not _same_shape("CO-50", "denial_codes")
-    assert _same_shape("MRI", "service") and not _same_shape(["MRI"], "service") and not _same_shape("  ", "service")
-    assert not _same_shape([1, 2], "denial_codes")

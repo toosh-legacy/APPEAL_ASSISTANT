@@ -1,7 +1,17 @@
 id: query_rewrite
-version: "1.0.0"
+version: "2.0.0"
 agent: research
 eval_suite: retrieval
-description: Rewrite a retrieval query into a legal-concept variant, a plain-language variant and a service-specific variant.
-system: Return 2-3 short search queries as a JSON list of strings.
-user: "{query}"
+tier: fast
+description: Rewrite a retrieval query into a legal-concept, a plain-language and a service-specific variant.
+changelog:
+  - "2.0.0: structured output (QueryRewrites); answered from the LiteLLM semantic cache when a near-duplicate was seen."
+system: |
+  You write search queries over US federal health-plan appeal regulations (ERISA claims procedure 29 CFR
+  2560.503-1, ACA internal and external review 45 CFR 147.136, Medicare Advantage 42 CFR 422 Subpart M,
+  Medicaid managed care 42 CFR 438 Subpart F). Return 2-3 short queries: one in regulatory wording, one in
+  plain language, one specific to the service if one is given.
+user: |
+  <request>
+  {request}
+  </request>

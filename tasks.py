@@ -1,6 +1,6 @@
 """Cross-platform task runner. The Makefile delegates here so Windows (no WSL) and Linux behave the same.
 
-Usage: uv run python tasks.py <setup|up|down|migrate|data|train|evaluate-models|eval|eval-fast|test|test-fast|demo|lint|obs|api|worker|retention>
+Usage: uv run python tasks.py <setup|up|down|migrate|data|train|evaluate-models|eval|eval-fast|eval-live|test|test-fast|demo|lint|obs|api|worker|retention>
 """
 
 from __future__ import annotations
@@ -83,20 +83,28 @@ def evaluate_models() -> None:
     run([PY, "-m", "appeal_ml.report"])
 
 
+OFFLINE = {"LLM_PROVIDER": "offline"}  # tests and the standard evals never call a hosted model
+
+
 def eval_() -> None:
-    run([PY, "-m", "appeal_evals.run", "--all"])
+    run([PY, "-m", "appeal_evals.run", "--all"], env=OFFLINE)
 
 
 def eval_fast() -> None:
-    run([PY, "-m", "appeal_evals.run", "--fast"])
+    run([PY, "-m", "appeal_evals.run", "--fast"], env=OFFLINE)
+
+
+def eval_live() -> None:
+    """Real OpenAI calls through the gateway on a sample of gold letters (budget-capped), plus Ragas."""
+    run([PY, "-m", "appeal_evals.run", "--all", "--live", "--limit", os.environ.get("EVAL_LIVE_LIMIT", "40")], env={"LLM_PROVIDER": "openai"})
 
 
 def test() -> None:
-    run([PY, "-m", "pytest"])
+    run([PY, "-m", "pytest"], env=OFFLINE)
 
 
 def test_fast() -> None:
-    run([PY, "-m", "pytest", "-m", "not full and not slow"])
+    run([PY, "-m", "pytest", "-m", "not full and not slow"], env=OFFLINE)
 
 
 def lint() -> None:
@@ -157,6 +165,7 @@ TASKS = {
     "evaluate-models": evaluate_models,
     "eval": eval_,
     "eval-fast": eval_fast,
+    "eval-live": eval_live,
     "test": test,
     "test-fast": test_fast,
     "lint": lint,

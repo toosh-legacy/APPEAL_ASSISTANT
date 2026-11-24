@@ -157,8 +157,8 @@ def test_worker_crash_resumes_without_rerunning_completed_steps(client, monkeypa
     with session_scope() as s:
         counts = dict(s.execute(select(AgentRun.agent, func.count()).where(AgentRun.case_id == cid).group_by(AgentRun.agent)).all())
     assert counts["intake"] == 1 and counts["classifier"] == 1 and counts["research"] == 1
-    # second run made only writer calls (no extraction or query-rewrite provider calls)
-    assert orch2.provider_calls == counts["writer"]
+    # second run made only writer and reviewer-judge calls (no extraction or query-rewrite provider calls)
+    assert orch2.provider_calls == counts["writer"] + counts["reviewer"]
     assert client.get(f"/v1/cases/{cid}", headers=H).json()["status"] == "READY"
     drain()  # the queued draft job is now a no-op replay
     assert client.get(f"/v1/cases/{cid}", headers=H).json()["status"] == "READY"

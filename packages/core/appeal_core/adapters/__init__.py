@@ -65,19 +65,12 @@ def set_progress_bus(bus) -> None:
 
 
 def get_llm():
+    """LangChain chains over the LiteLLM gateway (openai) or the offline fake chat model (tests/CI)."""
     p = get_settings().llm_provider
-    if p == "offline":
-        from appeal_core.llm.offline import OfflineProvider
+    if p in ("offline", "openai"):
+        from appeal_core.llm.chat import LLMProvider
 
-        return OfflineProvider()
-    if p == "openai":
-        from appeal_core.llm.openai_provider import OpenAIProvider
-
-        return OpenAIProvider()
-    if p == "ollama":
-        from appeal_core.llm.ollama import OllamaProvider
-
-        return OllamaProvider()
+        return LLMProvider()
     if p == "azure_openai":
         from appeal_core.adapters.azure import AzureOpenAIProvider
 

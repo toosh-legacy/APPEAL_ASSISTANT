@@ -18,7 +18,7 @@ services:
       retries: 30
 
   redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:7.4.0-v3  # Redis + RediSearch (vector search for the LiteLLM semantic cache)
     ports:
       - "56379:6379"
     healthcheck:
@@ -35,29 +35,43 @@ services:
     volumes:
       - azurite:/data
 
-  # The services below are for running everything in containers later.
-  # During the overnight build the api/worker run as host processes (see docs/ENVIRONMENT.md).
+  # Everything in containers: `docker compose --profile apps up --build` (web on :3100, API on :8000).
+  # The same images run on Azure Container Apps in Phase C. Needs ml/artifacts/ (run `make train` first).
   api:
     profiles: ["apps"]
     build: { context: ., dockerfile: services/api/Dockerfile }
+    image: appeal-api:local
     env_file: .env
-    environment:
+    environment: &app_env
       DATABASE_URL: postgresql+psycopg://appeal:appeal_local_only@postgres:5432/appeal
       REDIS_URL: redis://redis:6379/0
       BLOB_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      WORKER_MODE: separate
     ports: ["8000:8000"]
-    depends_on: [postgres, redis, azurite]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      azurite: { condition: service_started }
 
   worker:
     profiles: ["apps"]
-    build: { context: ., dockerfile: services/api/Dockerfile }
+    image: appeal-api:local
     command: ["python", "-m", "appeal_worker.main"]
     env_file: .env
-    environment:
-      DATABASE_URL: postgresql+psycopg://appeal:appeal_local_only@postgres:5432/appeal
-      REDIS_URL: redis://redis:6379/0
-      WORKER_MODE: separate
-    depends_on: [postgres, redis, azurite]
+    environment: *app_env
+    healthcheck: { disable: true }
+    depends_on:
+      api: { condition: service_started }
+
+  web:
+    profiles: ["apps"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args: { NEXT_PUBLIC_API_URL: "http://localhost:8000" }
+    image: appeal-web:local
+    ports: ["3100:3100"]
+    depends_on: [api]
 
   jaeger:
     profiles: ["obs"]

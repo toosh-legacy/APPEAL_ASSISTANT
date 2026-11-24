@@ -27,6 +27,9 @@ STATIC = Path(__file__).parent / "static"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     s = get_settings()
+    from appeal_core.llm.gateway import verify_models
+
+    verify_models()  # fail fast if a configured OpenAI model ID does not exist on the account
     stop = threading.Event()
     if s.worker_mode == "inprocess":
         from appeal_worker.orchestrator import run_worker
