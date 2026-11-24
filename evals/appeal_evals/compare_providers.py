@@ -1,13 +1,14 @@
-"""Offline-vs-local-LLM comparison (SPEC 21.4).
+"""Offline-vs-LLM comparison (SPEC 21.4; hosted OpenAI chosen by the developer over a local model).
 
 Runs the intake-level suites (extraction, classification, deadlines) on the gold letters once per provider,
 each in its own process so settings do not leak, and writes evals/reports/provider_comparison.md.
 
-    uv run python -m appeal_evals.compare_providers            # offline + ollama, all gold letters
-    uv run python -m appeal_evals.compare_providers --limit 40 # quicker: every 5th letter
+    uv run python -m appeal_evals.compare_providers                      # offline + openai, all gold letters
+    uv run python -m appeal_evals.compare_providers --limit 40           # quicker sample
+    uv run python -m appeal_evals.compare_providers --providers offline,ollama
 
-Needs a running Ollama server with the model in OLLAMA_MODEL (default llama3.2:3b). The LLM only fills
-extraction fields (see appeal_core/llm/ollama.py); the leak gate still runs before every call.
+`openai` needs OPENAI_API_KEY in .env (one extraction call per letter; OPENAI_MODEL, default gpt-4o-mini).
+The LLM only fills extraction fields (merged over the offline result); the leak gate runs before every call.
 """
 
 from __future__ import annotations
@@ -61,15 +62,21 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int)
     ap.add_argument("--child", action="store_true")
+    ap.add_argument("--providers", default="offline,openai")
     a = ap.parse_args()
     if a.child:
         print(json.dumps(_one(a.limit)))
         return
-    model = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
-    res = {"offline": _run_provider("offline", a.limit), f"ollama ({model})": _run_provider("ollama", a.limit)}
+    from appeal_core.settings import get_settings
+
+    models = {"openai": get_settings().openai_model, "ollama": os.environ.get("OLLAMA_MODEL", "llama3.2:3b")}
+    res = {}
+    for prov in a.providers.split(","):
+        label = f"{prov} ({models[prov]})" if prov in models else prov
+        res[label] = _run_provider(prov, a.limit)
     fields = next((r["per_field"] for r in res.values() if "per_field" in r), {})
     lines = [
-        "# Offline vs local LLM (SPEC 21.4)",
+        "# Offline vs LLM provider (SPEC 21.4)",
         "",
         "Intake-level suites on the gold letters. The LLM fills extraction fields; classification uses the extracted",
         "reason/codes with the same M1 model, so differences there come from extraction. Letters are synthetic.",
@@ -90,7 +97,7 @@ def main() -> None:
     row("classification macro-F1", lambda r: f"{r['macro_f1']:.3f}")
     row("ask-user rate", lambda r: f"{r['ask_user_rate']:.3f}")
     row("deadlines exact", lambda r: f"{r['deadlines_exact']:.3f}")
-    row("seconds per letter (CPU)", lambda r: f"{r['sec_per_letter']:.2f}")
+    row("seconds per letter", lambda r: f"{r['sec_per_letter']:.2f}")
     errs = {k: v["error"] for k, v in res.items() if "error" in v}
     if errs:
         lines += ["", "Errors:", ""] + [f"- {k}: `{v.strip().splitlines()[-1] if v.strip() else v}`" for k, v in errs.items()]

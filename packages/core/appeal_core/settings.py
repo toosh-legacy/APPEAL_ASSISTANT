@@ -20,7 +20,11 @@ class Settings(BaseSettings):
     queue_backend: str = "postgres"
     blob_backend: str = "azurite"
     progress_backend: str = "redis"
-    llm_provider: str = "offline"
+    llm_provider: str = "offline"  # offline | openai | ollama | azure_openai
+    openai_api_key: str = ""  # from the git-ignored .env only
+    openai_model: str = "gpt-4o-mini"
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_cost_per_1k_tokens: float = 0.0  # set to your model's blended price to track spend in agent_run.cost_usd
     embedder: str = "minilm"
     retriever_backend: str = "postgres"
     reranker: str = "crossencoder"  # crossencoder | none (CI: none, avoids the model download)

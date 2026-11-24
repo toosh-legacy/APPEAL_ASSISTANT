@@ -19,7 +19,7 @@ Source of truth: `SPEC.md`. If code and spec disagree, follow the spec. If the s
 2. No secrets in code; local keys are generated into git-ignored `.env`.
 3. Never invent legal content; deadlines need a cited rule.
 4. No agent tool sends data outside the case.
-5. No cloud resources, paid APIs or keys in Phases A/B.
+5. No cloud resources, paid APIs or keys in Phases A/B. Developer-approved exception: the optional `LLM_PROVIDER=openai` provider (key only in git-ignored `.env`; default stays `offline`; tests/CI never need a key).
 6. Every external dependency has a local adapter behind an interface; tests use it.
 7. Behavior changes ship with tests; AI changes ship with eval results.
 8. Synthetic data is unmistakably fake (Testperson names, ZZTEST IDs, 555-01xx, Example St).

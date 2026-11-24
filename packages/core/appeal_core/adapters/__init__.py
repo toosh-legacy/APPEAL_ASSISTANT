@@ -70,6 +70,10 @@ def get_llm():
         from appeal_core.llm.offline import OfflineProvider
 
         return OfflineProvider()
+    if p == "openai":
+        from appeal_core.llm.openai_provider import OpenAIProvider
+
+        return OpenAIProvider()
     if p == "ollama":
         from appeal_core.llm.ollama import OllamaProvider
 

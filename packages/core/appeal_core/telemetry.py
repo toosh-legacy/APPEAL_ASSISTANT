@@ -15,6 +15,8 @@ from appeal_core.privacy.pii import regex_detect
 
 _SENSITIVE: set[str] = set()
 _ZZ = re.compile(r"ZZTEST[\s-]?[A-Z0-9][A-Z0-9\s-]{2,14}", re.I)
+# API keys and bearer tokens (e.g. an OpenAI key in an error message) never reach logs
+_SECRET = re.compile(r"\b(sk-[A-Za-z0-9_\-]{16,}|Bearer\s+[A-Za-z0-9._\-]{16,})")
 
 
 def register_sensitive(values: list[str]) -> None:
@@ -36,6 +38,7 @@ def scrub(value: Any) -> Any:
         out = out.replace(raw, "[REDACTED]")
     for sp in sorted(regex_detect(out), key=lambda s: s.start, reverse=True):
         out = out[: sp.start] + f"[{sp.entity}]" + out[sp.end :]
+    out = _SECRET.sub("[SECRET]", out)
     return _ZZ.sub("[MEMBER_ID]", out)
 
 

@@ -9,30 +9,19 @@ mechanical; a model-written variant is a Phase B experiment measured by `make ev
 
 from __future__ import annotations
 
-import json
 import os
 from typing import Any
 
 import httpx
 
 from appeal_core.llm.base import ProviderUnavailable, guarded_call, prompt
+from appeal_core.llm.merge import merge_model_fields
 from appeal_core.llm.offline import offline_extract, offline_rewrite, offline_write
 
 
 class OllamaNotRunning(RuntimeError):
     pass
 
-
-LIST_FIELDS = {"denial_codes"}
-
-
-def _same_shape(v: Any, field: str) -> bool:
-    """Accept a model value only if it has the field's type: a list of strings for list fields, else a
-    non-empty string. Small models sometimes answer a string field with a list (or the reverse); those
-    values are ignored and the deterministic offline value is kept."""
-    if field in LIST_FIELDS:
-        return isinstance(v, list) and all(isinstance(c, str) for c in v)
-    return isinstance(v, str) and bool(v.strip())
 
 
 class OllamaProvider:
@@ -64,13 +53,9 @@ class OllamaProvider:
         def call(payload: dict) -> dict:
             base = offline_extract(payload["document"])
             try:
-                got = json.loads(self._chat(p["system"], p["user"].format(document=payload["document"])))
-                for k, v in (got.get("fields") or got).items():
-                    if k in base["fields"] and _same_shape(v, k):
-                        base["fields"][k]["value"] = [c.strip() for c in v] if isinstance(v, list) else v.strip()
-            except Exception:
-                pass
-            return base
+                return merge_model_fields(base, self._chat(p["system"], p["user"].format(document=payload["document"])))
+            except httpx.HTTPError:
+                return base
 
         try:
             out, _ = guarded_call(self.name, self.model, "intake_extract", {"document": tokenized_text}, case_raw_values, call)

@@ -99,7 +99,7 @@ All with reasons in `docs/DECISIONS.md`. The ones to know:
 - Model binaries git-ignored (cards/metrics committed); Playwright uses installed Chrome.
 
 ## 7. Top 10 next tasks (updated in Phase B, 2026-11-23)
-Done in Phase B: retrieval gate (dev 0.855; held-out 0.707, sealed 0.755), 200 gold letters incl. an unseen EOB layout, plain-language copy pass, mobile pass with automated checks, mypy 85 → 0 and blocking, ESLint/Prettier/Vitest in CI, CI running on GitHub, 57 MB parquet removed from history, Ollama installed and compared (`evals/reports/provider_comparison.md`).
+Done in Phase B: retrieval gate (dev 0.855; held-out 0.707, sealed 0.755), 200 gold letters incl. an unseen EOB layout, plain-language copy pass, mobile pass with automated checks, mypy 85 → 0 and blocking, ESLint/Prettier/Vitest in CI, CI running on GitHub, 57 MB parquet removed from history, optional hosted OpenAI provider (`LLM_PROVIDER=openai`, replaces the Ollama experiment at the developer's request; comparison runs once a key is in `.env`).
 
 Still open:
 1. **Review every rights summary and deadline rule** against its cited paragraph and set `status: reviewed` (`packages/kb/`). Nothing public before this. The Medicare Advantage (grade 11.5) and surprise-billing (14.8) summaries also need plainer wording (`evals/reports/readability.md`).

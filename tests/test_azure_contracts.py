@@ -68,7 +68,7 @@ def test_ollama_without_server_gives_clear_error(monkeypatch):
 
 
 def test_ollama_ignores_values_with_the_wrong_shape():
-    from appeal_core.llm.ollama import _same_shape
+    from appeal_core.llm.merge import same_shape as _same_shape
 
     assert _same_shape(["CO-50"], "denial_codes") and not _same_shape("CO-50", "denial_codes")
     assert _same_shape("MRI", "service") and not _same_shape(["MRI"], "service") and not _same_shape("  ", "service")
