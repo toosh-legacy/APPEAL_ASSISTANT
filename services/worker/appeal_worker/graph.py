@@ -128,6 +128,12 @@ def checkpointer_for(url: str | None = None) -> Any:
 
         conn = Connection.connect(db.replace("postgresql+psycopg://", "postgresql://"), autocommit=True, prepare_threshold=0, row_factory=dict_row)
         saver = PostgresSaver(conn)  # type: ignore[arg-type]
+        # setup() creates indexes CONCURRENTLY, which blocks behind any open transaction: `make migrate` runs it
+        # up front, so at runtime only call it when the tables are missing.
+        have = conn.execute("SELECT to_regclass('public.checkpoint_migrations') AS t").fetchone()
+        if have and have["t"] is not None:
+            _SAVERS[db] = saver
+            return saver
     saver.setup()
     _SAVERS[db] = saver
     return saver

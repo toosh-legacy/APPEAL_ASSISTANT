@@ -69,6 +69,9 @@ def down() -> None:
 
 def migrate() -> None:
     run([PY, "-m", "alembic", "upgrade", "head"])
+    # LangGraph checkpoint tables. PostgresSaver.setup() uses CREATE INDEX CONCURRENTLY, which waits for every
+    # open transaction, so it must run here, before the API/worker/tests hold connections.
+    run([PY, "-c", "from appeal_worker.graph import checkpointer_for; checkpointer_for()"])
 
 
 def data() -> None:
