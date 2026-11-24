@@ -72,3 +72,13 @@
 - mypy: 85 findings fixed, type check blocking in CI.
 - Web: ESLint, Prettier, Vitest (API client tests) in CI; lockfile regenerated for Linux.
 - OpenAI provider measured on all 200 gold letters (`evals/reports/provider_comparison.md`); model quotes (insurer, service, denial reason) must occur in the letter or the offline value is kept.
+
+## Phase B · Framework stack (LangChain, LangGraph, LiteLLM, OpenAI)
+- LLM layer: LangChain structured-output chains for every agent over a LiteLLM Router (cheap/strong tiers with fallbacks, `store=false`), OpenAI Moderation, cost guard with a hard per-session stop, Redis semantic cache for query rewrites, startup model-ID check, optional LangSmith tracing. `OfflineChatModel` (LangChain fake chat model) for tests/CI/`make eval`; `make eval-live` for real calls.
+- Orchestrator: LangGraph StateGraph with `interrupt()` for fact confirmation, category choice and human approval (`POST /v1/cases/{id}/approve`), Writer ⇄ Reviewer conditional edge, retry policies, PostgresSaver/SqliteSaver checkpoints.
+- Retrieval: OpenAI `text-embedding-3-small` vectors for all 425 rule chunks and 52,610 precedent chunks in langchain-postgres PGVector ($0.26), numpy store for lite mode, LangChain `BaseRetriever`s for Research, `bge-reranker-base` option, ablation rows for both.
+- Evals: `make eval-live` with an llm_cost suite (spend, cost per 1,000 cases, cache hit rate, cost saved) and Ragas; promptfoo red-team suite (40 attacks) in CI; fine-tuning experiment (`appeal_evals.finetune`).
+- ML: MLflow tracking + registry (`champion` alias), Optuna-tuned M1 candidate, DuckDB profiling report.
+- Backend: sse-starlette, WeasyPrint PDF (reportlab fallback), ics calendar with reminders. Docker images for api/worker and web.
+- Web: Tiptap letter editor with citation footnote nodes, shadcn/ui primitives.
+- Security: gitleaks pre-commit hook and history scan in CI.
