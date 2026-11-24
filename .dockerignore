@@ -1,0 +1,22 @@
+# Secrets and local state never go into an image
+.env
+.env.*
+!.env.example
+.git
+.venv
+var
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.hypothesis
+# Raw data and the large processed parquet are only needed to (re)load the database, not at runtime
+data/raw
+data/processed/*.parquet
+# Web build output and deps are rebuilt inside the image
+**/node_modules
+apps/web/.next
+apps/web/test-results
+apps/web/playwright-report
+RESUME_GUIDE.md
