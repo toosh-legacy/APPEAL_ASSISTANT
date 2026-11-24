@@ -9,6 +9,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     HF_HOME=/app/.cache/hf PATH="/app/.venv/bin:$PATH"
 COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /usr/local/bin/uv
 WORKDIR /app
+# Pango/HarfBuzz for WeasyPrint PDF export; DejaVu fonts for the letter
+RUN apt-get update && apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core \
+ && rm -rf /var/lib/apt/lists/*
 
 # Dependencies first (cached unless the lockfile changes). PyTorch comes from the CPU-only index: the locked
 # Linux wheel pulls ~4 GB of CUDA libraries that a CPU container never uses.
