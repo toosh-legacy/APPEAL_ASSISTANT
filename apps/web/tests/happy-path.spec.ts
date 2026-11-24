@@ -39,9 +39,12 @@ test("paste -> confirm -> letter -> export", async ({ page }) => {
   await axe(page, "workspace");
 
   // fill the placeholder, then export
-  const ph = page.getByRole("textbox", { name: "Closing sentence 3" });
-  await expect(ph).toHaveValue("[ADD: your phone number or email]");
-  await ph.fill("Phone: 555-0100");
+  // the closing section is a Tiptap editor (one paragraph per sentence); replace its placeholder line
+  const closing = page.getByRole("textbox", { name: "Closing text" });
+  await expect(closing).toContainText("[ADD: your phone number or email]");
+  await closing.getByText("[ADD: your phone number or email]").click({ clickCount: 3 });
+  await page.keyboard.type("Phone: 555-0100");
+  await expect(closing).not.toContainText("[ADD:");
   const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Download PDF" }).click()]);
   expect(dl.suggestedFilename()).toBe("appeal-letter.pdf");
 

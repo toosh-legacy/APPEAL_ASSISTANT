@@ -2,8 +2,11 @@
 import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import * as Dialog from "@radix-ui/react-dialog";
 import { API, api, download, getToken, CATEGORY_LABELS } from "@/lib/api";
+import { SourceFootnote } from "@/components/SourceFootnote";
+import { LetterSectionEditor, type Sentence } from "@/components/LetterSectionEditor";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const STEPS = [
   { agent: "intake", label: "Read the letter and hid personal details" },
@@ -63,42 +66,18 @@ function Progress({ id, status }: { id: string; status: string }) {
   );
 }
 
-function SourceFootnote({ n, src }: { n: number; src: any }) {
-  return (
-    <Dialog.Root>
-      <Dialog.Trigger asChild>
-        <button
-          type="button"
-          className="mx-0.5 inline-flex min-h-6 min-w-6 items-center justify-center align-super text-xs font-semibold text-brand-dark underline"
-          aria-label={`Source ${n}: ${src?.citation ?? ""}`}
-        >
-          [{n}]
-        </button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 max-h-[80vh] w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-xl bg-white p-5">
-          <Dialog.Title className="font-bold">{src?.citation}</Dialog.Title>
-          <Dialog.Description className="mt-2 whitespace-pre-wrap text-sm">{src?.excerpt}</Dialog.Description>
-          {src?.status === "needs_human_review" && <p className="badge mt-2 bg-amber-200 text-amber-900">Draft content — not yet reviewed</p>}
-          <p className="mt-3">
-            <a href={`/sources/${encodeURIComponent(src?.chunk_id ?? "")}`}>Open the full source</a>
-          </p>
-          <Dialog.Close className="btn-secondary mt-4">Close</Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
-
 function LetterEditor({ id }: { id: string }) {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["letter", id], queryFn: async () => (await api<any>(`/v1/cases/${id}/letter`, { caseId: id })).data });
   const [sections, setSections] = useState<any[] | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [reason, setReason] = useState<Record<string, string>>({});
+  const [rev, setRev] = useState(0); // remounts the editors when the server replaces the letter
   useEffect(() => {
-    if (q.data) setSections(q.data.sections);
+    if (q.data) {
+      setSections(q.data.sections);
+      setRev((r) => r + 1);
+    }
   }, [q.data]);
   const numbering = useMemo(() => {
     const m: Record<string, number> = {};
@@ -114,8 +93,8 @@ function LetterEditor({ id }: { id: string }) {
       .join(" ")
       .match(/\[ADD: [^\]]+\]/g)?.length ?? 0;
 
-  function edit(si: number, xi: number, text: string) {
-    setSections((prev) => prev!.map((s, i) => (i !== si ? s : { ...s, sentences: s.sentences.map((x: any, j: number) => (j !== xi ? x : { ...x, text })) })));
+  function editSection(si: number, sentences: Sentence[]) {
+    setSections((prev) => prev!.map((s, i) => (i !== si ? s : { ...s, sentences })));
   }
   async function save() {
     setMsg(null);
@@ -133,6 +112,7 @@ function LetterEditor({ id }: { id: string }) {
       });
       qc.setQueryData(["letter", id], r.data);
       setSections((r.data as any).sections);
+      setRev((x) => x + 1);
       setMsg("Paragraph regenerated and re-checked.");
     } catch (e: any) {
       setMsg(e.message);
@@ -153,7 +133,8 @@ function LetterEditor({ id }: { id: string }) {
         Your appeal letter
       </h2>
       <p className="text-sm">
-        Edit anything. Numbers in brackets open the exact source. Fill every <mark className="bg-amber-200">[ADD: …]</mark> before downloading.
+        Edit anything. Each line is one sentence; the numbers in brackets open the exact source and stay attached to their sentence. Fill every{" "}
+        <mark className="bg-amber-200">[ADD: …]</mark> before downloading.
       </p>
       {(L.review?.warnings ?? [])
         .filter((w: any) => w.code !== "placeholder")
@@ -181,45 +162,38 @@ function LetterEditor({ id }: { id: string }) {
                   <option value="firmer">Firmer</option>
                   <option value="add_detail">Add detail</option>
                 </select>
-                <button type="button" className="btn-secondary py-1" onClick={() => regenerate(s.id)}>
+                <Button type="button" variant="secondary" size="sm" onClick={() => regenerate(s.id)}>
                   Regenerate this paragraph
-                </button>
+                </Button>
               </div>
             )}
           </div>
-          {s.sentences.map((x: any, xi: number) => (
-            <div key={xi} className="flex items-start gap-1">
-              <label className="sr-only" htmlFor={`s-${si}-${xi}`}>
-                {s.title} sentence {xi + 1}
-              </label>
-              <textarea
-                id={`s-${si}-${xi}`}
-                className={`input min-h-[2.75rem] text-base ${/\[ADD:/.test(x.text) ? "border-amber-500 bg-amber-50" : ""}`}
-                rows={Math.max(1, Math.ceil(x.text.length / 80))}
-                value={x.text}
-                onChange={(e) => edit(si, xi, e.target.value)}
-              />
-              <span className="whitespace-nowrap pt-2">
-                {(x.citations ?? []).map((c: string) => (
-                  <SourceFootnote key={c} n={numbering[c]} src={L.sources[c]} />
-                ))}
-              </span>
-            </div>
-          ))}
+          <LetterSectionEditor
+            key={`${s.id}-${rev}`}
+            title={s.title}
+            sentences={s.sentences}
+            numbering={numbering}
+            sources={L.sources}
+            onChange={(sentences) => editSection(si, sentences)}
+          />
         </div>
       ))}
       <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-3">
-        <button type="button" className="btn-secondary" onClick={save}>
+        <Button type="button" variant="secondary" onClick={save}>
           Save changes
-        </button>
-        <button type="button" className="btn" disabled={placeholders > 0} onClick={() => exportAs("pdf")}>
+        </Button>
+        <Button type="button" disabled={placeholders > 0} onClick={() => exportAs("pdf")}>
           Download PDF
-        </button>
-        <button type="button" className="btn" disabled={placeholders > 0} onClick={() => exportAs("docx")}>
+        </Button>
+        <Button type="button" disabled={placeholders > 0} onClick={() => exportAs("docx")}>
           Download Word
-        </button>
+        </Button>
       </div>
-      {placeholders > 0 && <p className="text-sm">{placeholders} placeholder(s) still need your information before you can download.</p>}
+      {placeholders > 0 && (
+        <p className="text-sm">
+          <Badge variant="warning">{placeholders} to fill in</Badge> These placeholders still need your information before you can download.
+        </p>
+      )}
       {msg && (
         <p role="status" className="text-sm">
           {msg}

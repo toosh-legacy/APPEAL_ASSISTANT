@@ -22,7 +22,7 @@ def call_api(prompt: str, options: dict, context: dict) -> dict:
     from appeal_worker import agents
 
     letter = context["vars"]["letter"]
-    raw_ids = context["vars"].get("identifiers") or []
+    raw_ids = json.loads(context["vars"].get("identifiers") or "[]")
     ext, tokenized, tmap = agents.intake(letter)
     facts = {k: v.value for k, v in ext.fields.items()}
     facts["member_name"] = next((t for t in tmap.tokens if t.startswith("[PERSON_")), None)

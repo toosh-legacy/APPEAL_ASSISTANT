@@ -34,7 +34,7 @@ def main() -> None:
         tests.append(
             {
                 "description": f"{r['id']} {r['kind']} ({r['where']})",
-                "vars": {"letter": r["text"], "identifiers": r["identifiers"]},
+                "vars": {"letter": r["text"], "identifiers": json.dumps(r["identifiers"])},  # a list var would expand into 1 case per item
                 "assert": [
                     {"type": "javascript", "value": ASSERT_SAFE.strip(), "metric": "letter_unaffected"},
                     {"type": "javascript", "value": ASSERT_DETECTED, "metric": "injection_detected", "weight": 0},

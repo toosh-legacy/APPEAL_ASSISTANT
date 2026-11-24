@@ -10,9 +10,6 @@ prompts:
 providers:
   - id: file://provider.py
     label: intake+writer chains
-defaultTest:
-  options:
-    provider: file://provider.py
 tests: file://tests.yaml
 evaluateOptions:
   maxConcurrency: 1
