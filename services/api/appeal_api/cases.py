@@ -336,6 +336,18 @@ def confirm_extraction(body: Corrections, case_id: str = Depends(require_case_ac
     return {"status": c.status, "version": c.version}
 
 
+@router.post("/cases/{case_id}/approve")
+def approve_letter(case_id: str = Depends(require_case_access), db: Session = Depends(get_db)) -> dict:
+    """The person reviewed a letter the reviewer could not clear (NEEDS_HUMAN) and accepts it.
+    Resumes the paused LangGraph thread (human_review node), which marks the case READY."""
+    c = _case(db, case_id)
+    if c.status != Status.NEEDS_HUMAN:
+        raise Problem(409, "Nothing to approve", f"Case is {c.status}.")
+    get_queue().enqueue(db, "case.approve", {"case_id": case_id}, case_id=case_id)
+    db.commit()
+    return {"status": c.status, "queued": "case.approve"}
+
+
 @router.post("/cases/{case_id}/category")
 def choose_category(body: CategoryChoice, case_id: str = Depends(require_case_access), db: Session = Depends(get_db)) -> dict:
     c = _case(db, case_id)

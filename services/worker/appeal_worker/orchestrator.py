@@ -1,4 +1,4 @@
-"""Persisted state-machine orchestrator (SPEC 8.2, ADR-03).
+"""Case orchestrator: a LangGraph StateGraph (graph.py) whose nodes are the steps below (SPEC 8.2, ADR-03).
 
 Each step is keyed by (case_id, agent, input_hash). The step's output row (agent_run) and the case's
 state transition are committed in ONE transaction, so after a crash either both happened or neither did.
@@ -52,6 +52,7 @@ class Orchestrator:
         self._retriever = retriever
         self.bus = bus or get_progress_bus()
         self.provider_calls = 0  # for resilience tests
+        self._graph: Any = None
 
     @property
     def retriever(self):
@@ -127,6 +128,15 @@ class Orchestrator:
     def _vault(self, s: Session, case_id: str) -> tuple[bytes, TokenMap]:
         return vault_keys(s, case_id)
 
+    # ------------------------------------------------------------------ LangGraph
+    @property
+    def graph(self):
+        if self._graph is None:
+            from appeal_worker.graph import build_graph, checkpointer_for
+
+            self._graph = build_graph(self, checkpointer_for(self.url))
+        return self._graph
+
     # ------------------------------------------------------------------ job entry
     def handle(self, topic: str, case_id: str, carrier: dict | None = None) -> None:
         from appeal_core.db import get_engine
@@ -138,25 +148,49 @@ class Orchestrator:
                 raise CaseBusy(case_id)
             try:
                 with span(f"job.{topic}", carrier=carrier, topic=topic, case_id=case_id):
-                    if topic == "case.ingest":
-                        self.ingest(case_id)
-                    elif topic == "case.draft":
-                        self.draft(case_id)
-                    else:
+                    if topic not in ("case.ingest", "case.draft", "case.approve"):
                         raise ValueError(f"unknown topic {topic}")
+                    self.run_graph(case_id, topic)
             finally:
                 lock_conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": key})
                 lock_conn.commit()
 
-    # ------------------------------------------------------------------ ingest
-    def ingest(self, case_id: str) -> None:
+    def run_graph(self, case_id: str, topic: str) -> None:
+        """One LangGraph thread per case. A graph paused for human input resumes with Command(resume=...);
+        a graph that stopped mid-step (worker killed) continues from its last checkpoint; otherwise it starts
+        from the top, where completed steps replay from their agent_run rows without calling a provider."""
+        from langgraph.types import Command
+
+        cfg: Any = {"configurable": {"thread_id": case_id}}
+        g = self.graph
+        st = g.get_state(cfg)
+        if st.next and any(t.interrupts for t in st.tasks):
+            g.invoke(Command(resume={"topic": topic}), cfg, durability="sync")
+        elif st.next:
+            g.invoke(None, cfg, durability="sync")
+        else:
+            g.invoke({"case_id": case_id, "revision": 0, "drops": []}, cfg, durability="sync")
+            st = g.get_state(cfg)
+            if topic == "case.approve" and any(i.value.get("type") == "needs_human" for t in st.tasks for i in t.interrupts):
+                g.invoke(Command(resume={"topic": topic}), cfg, durability="sync")  # replayed up to the pause: deliver the approval
+        self.publish(case_id, type="status", status=self.status(case_id))
+
+    def status(self, case_id: str) -> str:
+        with self.Session() as s:
+            return must_get(s, Case, case_id).status
+
+    # ------------------------------------------------------------------ nodes (wired in graph.py)
+    def node_intake(self, case_id: str) -> bool:
+        """Returns False when the document cannot be read (case FAILED)."""
         with self.Session.begin() as s:
             case = must_get(s, Case, case_id)
             if case.status == Status.RECEIVED:
                 transition(s, case, Status.EXTRACTING, actor="worker")
                 self.publish(case_id, type="status", status=Status.EXTRACTING.value)
+            elif case.status == Status.FAILED:
+                return False
             elif case.status != Status.EXTRACTING:
-                return  # already past intake
+                return True  # already past intake
             doc = must_scalar(s, select(Document).where(Document.case_id == case_id), "document")
             doc_key = {"doc": doc.id, "sha": doc.sha256}
 
@@ -198,26 +232,24 @@ class Orchestrator:
                 case.error = str(e)
                 transition(s, case, Status.FAILED, actor="worker")
             self.publish(case_id, type="status", status="FAILED", message=str(e))
+            return False
+        return True
 
-    # ------------------------------------------------------------------ draft
-    def facts_for(self, s: Session, case_id: str) -> tuple[dict, TokenMap, bytes, list[str]]:
-        return facts_for(s, case_id)
-
-
-    def draft(self, case_id: str) -> None:
-        settings = get_settings()
+    def _facts(self, case_id: str) -> tuple[dict, TokenMap, bytes, list[str]]:
         with self.Session() as s:
             facts, tmap, dk, flags = self.facts_for(s, case_id)
-        # persist new tokens created from corrections
-        with self.Session.begin() as s:
+        with self.Session.begin() as s:  # persist new tokens created from corrections
             v = must_get(s, TokenVault, case_id)
             v.encrypted_map = encrypt(dk, tmap.to_json(), "tokenmap")
-        raw_values = tmap.raw_values()
+        return facts, tmap, dk, flags
 
+    def node_classify(self, case_id: str) -> bool:
+        """Returns True when the user must choose the category (case NEEDS_CATEGORY)."""
+        facts, tmap, _, _ = self._facts(case_id)
         reason: str | None = facts.get("denial_reason")
         codes: list[str] = list(facts.get("denial_codes") or [])
         service: str | None = facts.get("service")
-        cls_in = {"reason": reason, "codes": codes, "service": service}
+        raw = tmap.raw_values()
 
         def set_cat(s: Session, case: Case, out: dict) -> None:
             if not out["needs_user"]:
@@ -227,75 +259,94 @@ class Orchestrator:
             **self.step(
                 case_id,
                 "classifier",
-                cls_in,
-                lambda: agents.classify(reason, codes, service).model_dump(),
+                {"reason": reason, "codes": codes, "service": service},
+                lambda: agents.classify(reason, codes, service, raw_values=raw).model_dump(),
                 {Status.CLASSIFYING},
                 lambda o: Status.NEEDS_CATEGORY if o["needs_user"] else Status.RESEARCHING,
                 set_cat,
             )
         )
+        if self.status(case_id) == Status.NEEDS_CATEGORY:
+            self.publish(case_id, type="needs_category", status=Status.NEEDS_CATEGORY.value, suggestion=cls.category, alternatives=cls.alternatives)
+            return True
+        return False
+
+    def node_research(self, case_id: str) -> dict:
+        facts, _, _, _ = self._facts(case_id)
         with self.Session() as s:
             case = must_get(s, Case, case_id)
-            if case.status == Status.NEEDS_CATEGORY:
-                self.publish(case_id, type="needs_category", status=case.status, suggestion=cls.category, alternatives=cls.alternatives)
-                return
-            category: str = case.category or cls.category
+            cls_out = s.scalar(select(AgentRun.output).where(AgentRun.case_id == case_id, AgentRun.agent == "classifier").order_by(AgentRun.created_at.desc()).limit(1)) or {}
+            category: str = case.category or cls_out.get("category", "other_unclear")
             plan_type: str | None = case.plan_type or facts.get("plan_type")
+        service: str | None = facts.get("service")
+        reason: str | None = facts.get("denial_reason")
+        notice: str | None = facts.get("notice_date")
+        r_in = {"category": category, "plan_type": plan_type, "service": service, "reason": reason, "notice_date": notice}
+        out = self.step(
+            case_id,
+            "research",
+            r_in,
+            lambda: agents.research(category, plan_type, service, reason, notice, self.retriever).model_dump(),
+            {Status.RESEARCHING},
+            lambda o: Status.DRAFTING,
+        )
+        return {"category": category, "research": out}
 
-        r_in = {"category": category, "plan_type": plan_type, "service": facts.get("service"), "reason": facts.get("denial_reason"), "notice_date": facts.get("notice_date")}
-        res = Research(
+    def node_write(self, case_id: str, category: str, research: dict, revision: int, drops: list[str]) -> dict:
+        facts, tmap, _, _ = self._facts(case_id)
+        res = Research(**research)
+        w_in = {"facts": facts, "category": category, "research": input_hash(research), "rev": revision, "drops": drops}
+        return self.step(
+            case_id,
+            "writer",
+            w_in,
+            lambda: agents.write(facts, category, res, tmap.raw_values(), revision=revision, drop=drops).model_dump(),
+            {Status.DRAFTING},
+            lambda o: Status.REVIEWING,
+            lambda s, c, o: setattr(c, "degraded", bool(o.get("degraded")) or c.degraded),
+        )
+
+    def node_review(self, case_id: str, research: dict, draft_out: dict, revision: int) -> tuple[str, list[str]]:
+        """Returns (verdict, rewrite instructions); verdict is ready | revise | needs_human."""
+        facts, tmap, dk, flags = self._facts(case_id)
+        res, draft = Research(**research), LetterDraft(**draft_out)
+        last = revision >= get_settings().max_revisions
+
+        def decide(o: dict) -> Status:
+            if not o["blocking_issues"]:
+                return Status.READY
+            return Status.NEEDS_HUMAN if last else Status.DRAFTING
+
+        def finalize(s: Session, case: Case, o: dict) -> None:
+            if not o["blocking_issues"] or last:
+                self._store_letter(s, case, draft, Review(**o), res, tmap, dk)
+
+        rv = Review(
             **self.step(
                 case_id,
-                "research",
-                r_in,
-                lambda: agents.research(category, plan_type, service, reason, facts.get("notice_date"), self.retriever).model_dump(),
-                {Status.RESEARCHING},
-                lambda o: Status.DRAFTING,
+                "reviewer",
+                {"draft": draft_out, "research": input_hash(research)},
+                lambda: agents.review(draft, res, facts, set(tmap.tokens), flags, tmap.raw_values()).model_dump(),
+                {Status.REVIEWING},
+                decide,
+                finalize,
             )
         )
-        known = set(tmap.tokens)
-        drops: list[str] = []
-        for rev in range(settings.max_revisions + 1):
-            w_in = {"facts": facts, "category": category, "research": input_hash(res.model_dump()), "rev": rev, "drops": drops}
-            draft = LetterDraft(
-                **self.step(
-                    case_id,
-                    "writer",
-                    w_in,
-                    lambda: agents.write(facts, category, res, raw_values, revision=rev, drop=drops).model_dump(),
-                    {Status.DRAFTING},
-                    lambda o: Status.REVIEWING,
-                    lambda s, c, o: setattr(c, "degraded", bool(o.get("degraded")) or c.degraded),
-                )
-            )
-            last = rev >= settings.max_revisions
+        if not rv.blocking_issues:
+            return "ready", []
+        if last:
+            return "needs_human", []
+        return "revise", agents.drops_from_review(draft, rv)
 
-            def decide(o: dict, last=last) -> Status:
-                if not o["blocking_issues"]:
-                    return Status.READY
-                return Status.NEEDS_HUMAN if last else Status.DRAFTING
+    def node_approve(self, case_id: str) -> None:
+        """A person reviewed the NEEDS_HUMAN letter and approved it."""
+        with self.Session.begin() as s:
+            case = must_get(s, Case, case_id)
+            if case.status == Status.NEEDS_HUMAN:
+                transition(s, case, Status.READY, actor="user")
 
-            def finalize(s: Session, case: Case, o: dict, draft=draft) -> None:
-                if not o["blocking_issues"] or last:
-                    self._store_letter(s, case, draft, Review(**o), res, tmap, dk)
-
-            rv = Review(
-                **self.step(
-                    case_id,
-                    "reviewer",
-                    {"draft": draft.model_dump(), "research": input_hash(res.model_dump())},
-                    lambda: agents.review(draft, res, facts, known, flags).model_dump(),
-                    {Status.REVIEWING},
-                    decide,
-                    finalize,
-                )
-            )
-            if not rv.blocking_issues:
-                break
-            drops = sorted(set(drops) | set(agents.drops_from_review(draft, rv)))
-        with self.Session() as s:
-            st = must_get(s, Case, case_id).status
-        self.publish(case_id, type="status", status=st)
+    def facts_for(self, s: Session, case_id: str) -> tuple[dict, TokenMap, bytes, list[str]]:
+        return facts_for(s, case_id)
 
     def _store_letter(self, s: Session, case: Case, draft: LetterDraft, rv: Review, res: Research, tmap: TokenMap, dk: bytes) -> None:
         body = render_text(draft, tmap)
