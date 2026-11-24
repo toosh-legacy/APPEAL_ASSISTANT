@@ -12,6 +12,7 @@ from appeal_core.privacy.leak_gate import LeakBlocked
 LETTER = """Example Health Plan
 Notice date: March 3, 2025
 Member ID: [MEMBER_ID_1]
+Service: MRI of the brain
 Reason for denial: The service is not medically necessary.
 """
 KEY = "sk-test-not-a-real-key-000000"
@@ -90,3 +91,13 @@ def test_log_scrubber_redacts_api_keys():
 
     out = scrub({"msg": f"call failed with key {KEY}", "h": "Bearer abcdefghijklmnopqrstuvwxyz123"})
     assert KEY not in str(out) and "abcdefghijklmnop" not in str(out)
+
+
+def test_quoted_fields_must_appear_in_the_letter():
+    base = offline_extract(LETTER)
+    want = json.loads(json.dumps(base))
+    answer = json.dumps({"denial_reason": "Your plan decided this is experimental.", "insurer": "example   health PLAN", "state": "CA"})
+    out = merge_model_fields(json.loads(json.dumps(base)), answer, LETTER)
+    assert out["fields"]["denial_reason"]["value"] == want["fields"]["denial_reason"]["value"]  # invented: dropped
+    assert out["fields"]["insurer"]["value"] == "example   health PLAN"  # in the letter (case/space-insensitive): kept
+    assert out["fields"]["state"]["value"] == "CA"  # not a quoted field: shape check only

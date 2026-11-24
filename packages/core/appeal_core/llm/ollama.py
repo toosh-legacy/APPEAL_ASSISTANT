@@ -53,7 +53,7 @@ class OllamaProvider:
         def call(payload: dict) -> dict:
             base = offline_extract(payload["document"])
             try:
-                return merge_model_fields(base, self._chat(p["system"], p["user"].format(document=payload["document"])))
+                return merge_model_fields(base, self._chat(p["system"], p["user"].format(document=payload["document"])), payload["document"])
             except httpx.HTTPError:
                 return base
 

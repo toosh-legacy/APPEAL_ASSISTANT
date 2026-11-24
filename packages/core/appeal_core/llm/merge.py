@@ -11,6 +11,18 @@ import json
 from typing import Any
 
 LIST_FIELDS = {"denial_codes"}
+# fields the prompt asks the model to copy as written: a value that is not in the letter is a paraphrase or
+# an invention, so it is dropped and the offline value kept
+QUOTED_FIELDS = {"insurer", "service", "denial_reason"}
+
+
+def _norm(text: str) -> str:
+    return " ".join(text.lower().split())
+
+
+def grounded(v: str, field: str, document: str | None) -> bool:
+    """True unless `field` must be quoted and `v` does not occur in `document` (whitespace/case-insensitive)."""
+    return document is None or field not in QUOTED_FIELDS or _norm(v) in _norm(document)
 
 
 def same_shape(v: Any, field: str) -> bool:
@@ -20,8 +32,9 @@ def same_shape(v: Any, field: str) -> bool:
     return isinstance(v, str) and bool(v.strip())
 
 
-def merge_model_fields(base: dict[str, Any], model_json: str) -> dict[str, Any]:
-    """Overlay valid model values on `base` (an offline_extract result). Invalid JSON leaves base unchanged."""
+def merge_model_fields(base: dict[str, Any], model_json: str, document: str | None = None) -> dict[str, Any]:
+    """Overlay valid model values on `base` (an offline_extract result). Invalid JSON leaves base unchanged.
+    With `document`, quoted fields are accepted only when they occur in it."""
     try:
         got = json.loads(model_json)
     except (TypeError, ValueError):
@@ -31,7 +44,7 @@ def merge_model_fields(base: dict[str, Any], model_json: str) -> dict[str, Any]:
     inner = got.get("fields")
     fields: dict[str, Any] = inner if isinstance(inner, dict) else got
     for k, v in fields.items():
-        if k in base["fields"] and same_shape(v, k):
+        if k in base["fields"] and same_shape(v, k) and (isinstance(v, list) or grounded(v, k, document)):
             base["fields"][k]["value"] = [c.strip() for c in v] if isinstance(v, list) else v.strip()
     base["missing_fields"] = [k for k, f in base["fields"].items() if not f["value"] and k != "denial_codes"]
     base["plan_type"] = base["fields"]["plan_type"]["value"]

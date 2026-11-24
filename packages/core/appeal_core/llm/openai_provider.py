@@ -62,7 +62,7 @@ class OpenAIProvider:
 
         def call(payload: dict) -> dict:
             base = offline_extract(payload["document"])
-            return merge_model_fields(base, self._chat(p["system"], p["user"].format(document=payload["document"])))
+            return merge_model_fields(base, self._chat(p["system"], p["user"].format(document=payload["document"])), payload["document"])
 
         out, _ = guarded_call(self.name, self.model, "intake_extract", {"document": tokenized_text}, case_raw_values, call, cost_per_1k=self.cost_per_1k)
         return out

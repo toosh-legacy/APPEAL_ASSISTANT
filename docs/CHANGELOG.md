@@ -71,4 +71,4 @@
 - Readability checker and plain-language pass on web copy and playbook explanations.
 - mypy: 85 findings fixed, type check blocking in CI.
 - Web: ESLint, Prettier, Vitest (API client tests) in CI; lockfile regenerated for Linux.
-
+- OpenAI provider measured on all 200 gold letters (`evals/reports/provider_comparison.md`); model quotes (insurer, service, denial reason) must occur in the letter or the offline value is kept.
