@@ -28,10 +28,10 @@ from appeal_core.privacy.vault import TokenMap, decrypt, encrypt, new_data_key, 
 from appeal_core.schemas import Research
 from appeal_core.state_machine import ConcurrencyConflict, Status, transition
 from fastapi import APIRouter, Depends, Header, Request, Response
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sse_starlette import EventSourceResponse, ServerSentEvent
 
 from appeal_api.deps import Problem, TokenBucket, case_token, get_db, require_case_access
 
@@ -263,20 +263,21 @@ async def events(request: Request, case_id: str = Depends(require_case_access), 
     after = int(last_event_id) if last_event_id and last_event_id.isdigit() else int(request.query_params.get("after", 0))
 
     async def gen():
-        yield ": connected\n\n"
+        yield ServerSentEvent(comment="connected")
         async for ev in bus.subscribe(case_id, after_id=after, heartbeat=10.0):
             if await request.is_disconnected():
                 return
             if ev.get("type") == "heartbeat":
-                yield ": heartbeat\n\n"
+                yield ServerSentEvent(comment="heartbeat")
                 continue
-            yield f"id: {ev['id']}\nevent: {ev.get('type', 'message')}\ndata: {json.dumps(ev, default=str)}\n\n"
+            yield ServerSentEvent(id=str(ev["id"]), event=ev.get("type", "message"), data=json.dumps(ev, default=str))
             terminal = (ev.get("type") == "status" and ev.get("status") in TERMINAL) or ev.get("type") == "needs_category"
             # during replay, a terminal event followed by later events is stale: keep streaming
             if terminal and not bus.history(case_id, ev["id"]):
                 return
 
-    return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    # sse-starlette: proper SSE framing, client-disconnect handling; heartbeats come from the progress bus
+    return EventSourceResponse(gen(), ping=None, headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 # ---------------------------------------------------------------- confirm

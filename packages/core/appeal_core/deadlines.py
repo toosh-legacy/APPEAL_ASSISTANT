@@ -54,21 +54,23 @@ def next_level_options(plan_type: str | None) -> list[dict[str, Any]]:
 
 
 def ics_for(deadline: dict[str, Any], uid: str) -> str:
-    """Minimal RFC 5545 all-day event for the due date."""
-    d = deadline["due_date"].replace("-", "")
-    return "\r\n".join(
-        [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//Appeal Assistant//local//EN",
-            "BEGIN:VEVENT",
-            f"UID:{uid}@appeal-assistant.local",
-            f"DTSTAMP:{date.today().strftime('%Y%m%d')}T000000Z",
-            f"DTSTART;VALUE=DATE:{d}",
-            f"SUMMARY:Appeal deadline: {deadline['label']}",
-            f"DESCRIPTION:Based on {deadline.get('basis_citation') or 'cited rule'}. Check your notice for the exact date.",
-            "END:VEVENT",
-            "END:VCALENDAR",
-            "",
-        ]
+    """RFC 5545 calendar (the `ics` library): an all-day event on the due date with reminders 7 days and
+    1 day before."""
+    from datetime import timedelta
+
+    from ics import Calendar, DisplayAlarm, Event
+
+    ev = Event(
+        name=f"Appeal deadline: {deadline['label']}",
+        begin=date.fromisoformat(deadline["due_date"]),
+        uid=f"{uid}@appeal-assistant.local",
+        description=f"Based on {deadline.get('basis_citation') or 'cited rule'}. Check your notice for the exact date.",
     )
+    ev.make_all_day()
+    label = f"Appeal deadline: {deadline['label']}"
+    ev.alarms = [DisplayAlarm(trigger=timedelta(days=-7), display_text=f"In 7 days: {label}"), DisplayAlarm(trigger=timedelta(days=-1), display_text=f"Tomorrow: {label}")]
+    cal = Calendar(creator="-//Appeal Assistant//local//EN")
+    cal.events.add(ev)
+    # ics 0.7 omits DTSTAMP, which RFC 5545 requires on every VEVENT
+    stamp = f"DTSTAMP:{date.today().strftime('%Y%m%d')}T000000Z"
+    return cal.serialize().replace("BEGIN:VEVENT\r\n", "BEGIN:VEVENT\r\n" + stamp + "\r\n", 1)
