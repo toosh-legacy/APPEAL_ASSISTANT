@@ -8,7 +8,7 @@
 
 ## m1
 
-- Selected: logreg; validation macro-F1 {'linear_svm_calibrated': 1.0, 'logreg': 1.0}
+- Selected: logreg; validation macro-F1 {'linear_svm_calibrated': 1.0, 'logreg': 1.0, 'logreg_optuna': 1.0}
 - Gold macro-F1 0.839; ECE OOF 0.0339, gold 0.0847
 - Ask-user threshold 0.70; gold coverage 82.5%, accuracy when answered 0.8909090909090909
 - Ablation without codes: gold macro-F1 0.733

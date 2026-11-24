@@ -94,6 +94,12 @@
       "rows_added": 425,
       "source": "openai via LiteLLM"
     },
+    "embeddings_openai_precedent_chunk": {
+      "dim": 1536,
+      "embedder": "text-embedding-3-small",
+      "rows_added": 52610,
+      "source": "openai via LiteLLM"
+    },
     "imr": {
       "downloaded_at": "2026-11-23T07:22:56+00:00",
       "exact_duplicates_dropped": 39,

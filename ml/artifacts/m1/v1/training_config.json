@@ -2,13 +2,21 @@
   "calibration": "temperature scaling on grouped (by reason template) out-of-fold predictions",
   "candidates": [
     "logreg",
-    "linear_svm_calibrated"
+    "linear_svm_calibrated",
+    "logreg_optuna"
   ],
   "data_hashes": {
     "gold": "a589aa813bf458ab0a9b597e15e90db7f9e333933031b13b86a1cb069373933c",
     "train": "72a5088164cf5ceb58fb32be4601ceed51c94dc109ccd1f93840a4bdf27f5b46",
     "validation": "74f94dc73f59095357ed49b337f29150b9a93f779f7f75b23973aa56fc3ae5c2"
   },
-  "git_sha": "5f633afb1bc76d9cd91b61b337c87c6245daaf62",
+  "git_sha": "33f4442c36efadd13fafe1515d712296a4ef181e",
+  "optuna_best": {
+    "C": 0.10330527351766446,
+    "char_max": 6,
+    "grouped_cv_macro_f1": 0.8108747674659869,
+    "n_trials": 20,
+    "word_min_df": 1
+  },
   "seed": 20251123
 }

@@ -19,6 +19,9 @@ def main(which: str) -> None:
         ok, why = should_promote(name, mod.VERSION)
         if ok:
             pin(name, mod.VERSION)
+        from appeal_ml.tracking import log_training
+
+        log_training(name, mod.VERSION, ok, why)  # MLflow run + registry version (+ `champion` alias)
         print(f"[{name}] trained in {time.time() - t0:.0f}s; promote={ok} ({why})", flush=True)
     from appeal_ml.report import write_report
 

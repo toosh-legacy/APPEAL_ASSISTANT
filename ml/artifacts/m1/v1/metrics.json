@@ -188,10 +188,18 @@
   "oof_ece_calibrated": 0.0338549083678631,
   "oof_ece_raw": 0.20774511723002934,
   "oof_macro_f1_unseen_templates": 0.8402991791226839,
+  "optuna": {
+    "C": 0.10330527351766446,
+    "char_max": 6,
+    "grouped_cv_macro_f1": 0.8108747674659869,
+    "n_trials": 20,
+    "word_min_df": 1
+  },
   "selected_model": "logreg",
   "temperature": 0.44983182142517136,
   "validation_macro_f1": {
     "linear_svm_calibrated": 1.0,
-    "logreg": 1.0
+    "logreg": 1.0,
+    "logreg_optuna": 1.0
   }
 }

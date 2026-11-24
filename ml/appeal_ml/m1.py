@@ -36,21 +36,51 @@ def load(path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def features(with_codes: bool = True) -> ColumnTransformer:
+def features(with_codes: bool = True, char_max: int = 5, word_min_df: int = 1) -> ColumnTransformer:
     tf = [
-        ("word", TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1), "reason"),
-        ("char", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5), sublinear_tf=True, min_df=2), "reason"),
+        ("word", TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=word_min_df), "reason"),
+        ("char", TfidfVectorizer(analyzer="char_wb", ngram_range=(3, char_max), sublinear_tf=True, min_df=2), "reason"),
     ]
     if with_codes:
         tf.append(("codes", CountVectorizer(token_pattern=r"[A-Z]+-?\d*", lowercase=False, binary=True), "codes"))
     return ColumnTransformer(tf)
 
 
-def candidates(with_codes: bool = True) -> dict[str, Pipeline]:
-    return {
+def candidates(with_codes: bool = True, tuned: dict | None = None) -> dict[str, Pipeline]:
+    out = {
         "logreg": Pipeline([("f", features(with_codes)), ("clf", LogisticRegression(C=4.0, max_iter=3000, random_state=SEED))]),
         "linear_svm_calibrated": Pipeline([("f", features(with_codes)), ("clf", CalibratedClassifierCV(LinearSVC(C=0.5, random_state=SEED), cv=3, method="sigmoid"))]),
     }
+    if tuned:
+        out["logreg_optuna"] = Pipeline(
+            [
+                ("f", features(with_codes, char_max=tuned["char_max"], word_min_df=tuned["word_min_df"])),
+                ("clf", LogisticRegression(C=tuned["C"], max_iter=3000, random_state=SEED)),
+            ]
+        )
+    return out
+
+
+def tune(tr: pd.DataFrame, n_trials: int = 20) -> dict:
+    """Optuna (seeded TPE) over C and TF-IDF settings, scored by grouped CV on the training letters
+    (groups = reason template, so each fold scores phrasings it never saw). Logged to MLflow."""
+    import optuna
+    from sklearn.model_selection import StratifiedGroupKFold, cross_val_score
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+
+    def objective(trial: optuna.Trial) -> float:
+        p = {"C": trial.suggest_float("C", 0.1, 50.0, log=True), "char_max": trial.suggest_int("char_max", 4, 6), "word_min_df": trial.suggest_int("word_min_df", 1, 3)}
+        pipe = Pipeline([("f", features(True, p["char_max"], p["word_min_df"])), ("clf", LogisticRegression(C=p["C"], max_iter=3000, random_state=SEED))])
+        cv = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=SEED)
+        return float(cross_val_score(pipe, tr[["reason", "codes"]], tr.y, groups=tr.template, cv=cv, scoring="f1_macro").mean())
+
+    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=SEED))
+    study.optimize(objective, n_trials=n_trials)
+    from appeal_ml.tracking import log_optuna_study
+
+    log_optuna_study("m1", study)
+    return {**study.best_params, "grouped_cv_macro_f1": float(study.best_value), "n_trials": n_trials}
 
 
 def temperature_scale(p: np.ndarray, T: float) -> np.ndarray:
@@ -105,7 +135,8 @@ def train() -> dict:
     tr, va, gold = load(TRAIN), load(VAL), load(GOLD)
     results = {}
     fitted = {}
-    for name, pipe in candidates().items():
+    tuned = tune(tr)
+    for name, pipe in candidates(tuned=tuned).items():
         pipe.fit(tr[["reason", "codes"]], tr.y)
         pred = pipe.predict(va[["reason", "codes"]])
         results[name] = float(f1_score(va.y, pred, average="macro"))
@@ -118,7 +149,7 @@ def train() -> dict:
     from sklearn.model_selection import StratifiedGroupKFold, cross_val_predict
 
     allx = pd.concat([tr, va], ignore_index=True)
-    oof = cross_val_predict(candidates()[best_name], allx[["reason", "codes"]], allx.y, groups=allx.template, cv=StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=SEED), method="predict_proba")
+    oof = cross_val_predict(candidates(tuned=tuned)[best_name], allx[["reason", "codes"]], allx.y, groups=allx.template, cv=StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=SEED), method="predict_proba")
     classes = np.array(sorted(allx.y.unique()))
     y_idx = np.searchsorted(classes, allx.y.values)
     T = fit_temperature(oof, y_idx)
@@ -141,6 +172,7 @@ def train() -> dict:
     answered = gold_conf >= thr
     metrics = {
         "selected_model": best_name,
+        "optuna": tuned,
         "validation_macro_f1": results,
         "oof_ece_raw": ece(conf_raw, corr_raw),
         "temperature": T,
@@ -156,7 +188,7 @@ def train() -> dict:
         "gold_confusion_matrix": {"labels": CATEGORIES, "matrix": confusion_matrix(gold.y, gpred, labels=CATEGORIES).tolist()},
     }
     # ablation: without denial codes
-    abl = candidates(with_codes=False)[best_name]
+    abl = candidates(with_codes=False, tuned=tuned)[best_name]
     abl.fit(tr[["reason", "codes"]], tr.y)
     metrics["ablation_no_codes"] = {
         "validation_macro_f1": float(f1_score(va.y, abl.predict(va[["reason", "codes"]]), average="macro")),
@@ -167,7 +199,7 @@ def train() -> dict:
     save_json(d / "metrics.json", metrics)
     save_json(
         d / "training_config.json",
-        {"seed": SEED, "git_sha": git_sha(), "data_hashes": {"train": file_hash(TRAIN), "validation": file_hash(VAL), "gold": file_hash(GOLD)}, "candidates": list(results), "calibration": "temperature scaling on grouped (by reason template) out-of-fold predictions"},
+        {"seed": SEED, "git_sha": git_sha(), "data_hashes": {"train": file_hash(TRAIN), "validation": file_hash(VAL), "gold": file_hash(GOLD)}, "candidates": list(results), "optuna_best": tuned, "calibration": "temperature scaling on grouped (by reason template) out-of-fold predictions"},
     )
     (d / "model_card.md").write_text(model_card(metrics, classification_report(gold.y, gpred, zero_division=0)), encoding="utf-8")
     return metrics

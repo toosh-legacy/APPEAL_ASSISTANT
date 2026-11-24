@@ -12,7 +12,8 @@ TF-IDF word 1-2-grams and character 3-5-grams of the reason text; binary indicat
 ## Models compared (validation macro-F1)
 {
  "logreg": 1.0,
- "linear_svm_calibrated": 1.0
+ "linear_svm_calibrated": 1.0,
+ "logreg_optuna": 1.0
 }
 
 Selected: **logreg**.
